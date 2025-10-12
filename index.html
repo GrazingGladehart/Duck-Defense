@@ -216,8 +216,8 @@
 
         // ==================== SCENE SETUP ====================
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB);
-        scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
+        scene.background = new THREE.Color(0x6B8E7F); // Murky marsh sky
+        scene.fog = new THREE.Fog(0x8B9A8E, 20, 70); // Humid marsh fog
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -261,44 +261,59 @@
         }
         
         groundGeometry.computeVertexNormals();
-        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x4a7c59 });
+        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x3D5A3D }); // Darker marsh ground
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Water patches (slow movement)
+        // Dark murky swamp water patches
         const waterZones = [];
-        for (let i = 0; i < 30; i++) {
-            const waterGeom = new THREE.CircleGeometry(Math.random() * 3 + 1, 16);
-            const waterMat = new THREE.MeshLambertMaterial({ color: 0x4a90e2, transparent: true, opacity: 0.7 });
+        for (let i = 0; i < 40; i++) {
+            const waterGeom = new THREE.CircleGeometry(Math.random() * 4 + 2, 16);
+            const waterMat = new THREE.MeshLambertMaterial({ color: 0x2F4538, transparent: true, opacity: 0.8 }); // Dark swamp water
             const water = new THREE.Mesh(waterGeom, waterMat);
             water.rotation.x = -Math.PI / 2;
             const x = (Math.random() - 0.5) * 90;
             const z = (Math.random() - 0.5) * 90;
-            water.position.set(x, getTerrainHeight(x, z) + 0.1, z);
+            water.position.set(x, getTerrainHeight(x, z) + 0.05, z);
             scene.add(water);
             waterZones.push({ position: new THREE.Vector3(x, 0, z), radius: water.geometry.parameters.radius });
         }
 
-        // Trees (collision obstacles)
+        // Cypress trees with spanish moss (collision obstacles)
         function createTree() {
             const tree = new THREE.Group();
             
-            const trunkGeom = new THREE.CylinderGeometry(0.3, 0.4, 4, 6);
-            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x654321 });
+            // Wider base, narrow top - cypress style
+            const trunkGeom = new THREE.CylinderGeometry(0.25, 0.5, 5, 8);
+            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4A3C28 }); // Dark cypress bark
             const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-            trunk.position.y = 2;
+            trunk.position.y = 2.5;
             trunk.castShadow = true;
             tree.add(trunk);
             
-            const leavesGeom = new THREE.SphereGeometry(2, 6, 6);
-            const leavesMat = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+            // Sparse canopy
+            const leavesGeom = new THREE.ConeGeometry(1.5, 3, 8);
+            const leavesMat = new THREE.MeshLambertMaterial({ color: 0x4A6741 }); // Darker cypress green
             const leaves = new THREE.Mesh(leavesGeom, leavesMat);
-            leaves.position.y = 4.5;
-            leaves.scale.y = 1.5;
+            leaves.position.y = 5.5;
             leaves.castShadow = true;
             tree.add(leaves);
+            
+            // Spanish moss hanging down
+            for (let i = 0; i < 3; i++) {
+                const mossGeom = new THREE.BoxGeometry(0.1, 1.5, 0.1);
+                const mossMat = new THREE.MeshLambertMaterial({ color: 0x8B9467 }); // Grayish-green moss
+                const moss = new THREE.Mesh(mossGeom, mossMat);
+                moss.position.set(
+                    (Math.random() - 0.5) * 1.5,
+                    4.2,
+                    (Math.random() - 0.5) * 1.5
+                );
+                moss.rotation.z = (Math.random() - 0.5) * 0.3;
+                tree.add(moss);
+            }
             
             return tree;
         }
@@ -314,13 +329,13 @@
             }
         }
 
-        // Bushes (slow movement)
+        // Swamp vegetation - palmetto bushes (slow movement)
         const bushZones = [];
         function createBush() {
             const bushGeom = new THREE.SphereGeometry(1, 6, 6);
-            const bushMat = new THREE.MeshLambertMaterial({ color: 0x2F4F2F });
+            const bushMat = new THREE.MeshLambertMaterial({ color: 0x3A4F3A }); // Darker swamp vegetation
             const bush = new THREE.Mesh(bushGeom, bushMat);
-            bush.scale.set(1, 0.6, 1);
+            bush.scale.set(1.2, 0.5, 1.2);
             bush.castShadow = true;
             return bush;
         }
@@ -395,6 +410,23 @@
             rightEye.position.set(0.15, 0.9, 0.3);
             duck.add(leftEye, rightEye);
             
+            // Wings
+            const wingGeom = new THREE.BoxGeometry(0.6, 0.1, 0.4);
+            const wingMat = new THREE.MeshLambertMaterial({ color: 0xFFDD00 });
+            const leftWing = new THREE.Mesh(wingGeom, wingMat);
+            leftWing.position.set(-0.5, 0.2, 0);
+            leftWing.rotation.z = -Math.PI / 6;
+            leftWing.castShadow = true;
+            duck.add(leftWing);
+            duck.userData.leftWing = leftWing;
+            
+            const rightWing = new THREE.Mesh(wingGeom, wingMat);
+            rightWing.position.set(0.5, 0.2, 0);
+            rightWing.rotation.z = Math.PI / 6;
+            rightWing.castShadow = true;
+            duck.add(rightWing);
+            duck.userData.rightWing = rightWing;
+            
             return duck;
         }
 
@@ -403,30 +435,65 @@
             
             switch(weaponType) {
                 case 'sword':
-                    const bladeGeom = new THREE.BoxGeometry(0.1, 1.5, 0.05);
-                    const bladeMat = new THREE.MeshLambertMaterial({ color: 0xCCCCCC });
+                    const bladeGeom = new THREE.BoxGeometry(0.12, 2.0, 0.06);
+                    const bladeMat = new THREE.MeshLambertMaterial({ color: 0xE0E0E0 });
                     const blade = new THREE.Mesh(bladeGeom, bladeMat);
-                    blade.position.y = 0.75;
+                    blade.position.y = 1.0;
                     weapon.add(blade);
                     
-                    const handleGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.4, 6);
+                    // Blade edge highlight
+                    const edgeGeom = new THREE.BoxGeometry(0.02, 2.0, 0.06);
+                    const edgeMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                    const edge = new THREE.Mesh(edgeGeom, edgeMat);
+                    edge.position.set(0.055, 1.0, 0);
+                    weapon.add(edge);
+                    
+                    const handleGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 6);
                     const handleMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
                     const handle = new THREE.Mesh(handleGeom, handleMat);
+                    handle.position.y = -0.25;
                     weapon.add(handle);
+                    
+                    // Crossguard/Hilt
+                    const guardGeom = new THREE.BoxGeometry(0.5, 0.08, 0.08);
+                    const guardMat = new THREE.MeshLambertMaterial({ color: 0xDAA520 });
+                    const guard = new THREE.Mesh(guardGeom, guardMat);
+                    guard.position.y = 0;
+                    weapon.add(guard);
+                    
+                    // Pommel
+                    const pommelGeom = new THREE.SphereGeometry(0.12, 6, 6);
+                    const pommel = new THREE.Mesh(pommelGeom, guardMat);
+                    pommel.position.y = -0.5;
+                    weapon.add(pommel);
                     break;
                     
                 case 'hammer':
-                    const hammerHeadGeom = new THREE.BoxGeometry(0.5, 0.5, 0.3);
-                    const hammerHeadMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
+                    const hammerHeadGeom = new THREE.BoxGeometry(0.8, 0.8, 0.5);
+                    const hammerHeadMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
                     const hammerHead = new THREE.Mesh(hammerHeadGeom, hammerHeadMat);
-                    hammerHead.position.y = 1;
+                    hammerHead.position.y = 1.5;
                     weapon.add(hammerHead);
                     
-                    const hammerHandleGeom = new THREE.CylinderGeometry(0.06, 0.06, 1, 6);
-                    const hammerHandleMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                    // Metal band on hammer head
+                    const bandGeom = new THREE.BoxGeometry(0.82, 0.15, 0.52);
+                    const bandMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+                    const band = new THREE.Mesh(bandGeom, bandMat);
+                    band.position.y = 1.5;
+                    weapon.add(band);
+                    
+                    const hammerHandleGeom = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 6);
+                    const hammerHandleMat = new THREE.MeshLambertMaterial({ color: 0x654321 });
                     const hammerHandle = new THREE.Mesh(hammerHandleGeom, hammerHandleMat);
-                    hammerHandle.position.y = 0.5;
+                    hammerHandle.position.y = 0.75;
                     weapon.add(hammerHandle);
+                    
+                    // Handle grip
+                    const gripGeom = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8);
+                    const gripMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                    const grip = new THREE.Mesh(gripGeom, gripMat);
+                    grip.position.y = 0.3;
+                    weapon.add(grip);
                     break;
                     
                 case 'rifle':
@@ -445,27 +512,63 @@
                     break;
                     
                 case 'catapult':
-                    const baseGeom = new THREE.BoxGeometry(0.4, 0.2, 0.3);
-                    const base = new THREE.Mesh(baseGeom, new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
-                    weapon.add(base);
+                    const catapultBaseGeom = new THREE.BoxGeometry(0.8, 0.3, 0.6);
+                    const catapultBase = new THREE.Mesh(catapultBaseGeom, new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
+                    catapultBase.position.y = 0.15;
+                    weapon.add(catapultBase);
                     
-                    const armGeom = new THREE.BoxGeometry(0.05, 0.6, 0.05);
-                    const arm = new THREE.Mesh(armGeom, new THREE.MeshLambertMaterial({ color: 0x654321 }));
-                    arm.position.y = 0.3;
-                    weapon.add(arm);
+                    const catapultArmGeom = new THREE.BoxGeometry(0.08, 1.0, 0.08);
+                    const catapultArm = new THREE.Mesh(catapultArmGeom, new THREE.MeshLambertMaterial({ color: 0x654321 }));
+                    catapultArm.position.y = 0.65;
+                    weapon.add(catapultArm);
+                    
+                    // Spoon/bucket
+                    const spoonGeom = new THREE.BoxGeometry(0.3, 0.1, 0.3);
+                    const spoon = new THREE.Mesh(spoonGeom, new THREE.MeshLambertMaterial({ color: 0x654321 }));
+                    spoon.position.y = 1.1;
+                    weapon.add(spoon);
+                    
+                    // Support beams
+                    const supportGeom = new THREE.BoxGeometry(0.1, 0.6, 0.1);
+                    const support1 = new THREE.Mesh(supportGeom, new THREE.MeshLambertMaterial({ color: 0x654321 }));
+                    support1.position.set(-0.3, 0.45, 0);
+                    support1.rotation.z = -0.3;
+                    weapon.add(support1);
+                    const support2 = new THREE.Mesh(supportGeom, new THREE.MeshLambertMaterial({ color: 0x654321 }));
+                    support2.position.set(0.3, 0.45, 0);
+                    support2.rotation.z = 0.3;
+                    weapon.add(support2);
                     break;
                     
                 case 'cannon':
-                    const cannonGeom = new THREE.CylinderGeometry(0.15, 0.12, 0.8, 8);
-                    const cannon = new THREE.Mesh(cannonGeom, new THREE.MeshLambertMaterial({ color: 0x444444 }));
-                    cannon.rotation.z = Math.PI / 2;
-                    cannon.position.x = 0.4;
-                    weapon.add(cannon);
+                    const cannonBarrelGeom = new THREE.CylinderGeometry(0.25, 0.2, 1.2, 8);
+                    const cannonBarrel = new THREE.Mesh(cannonBarrelGeom, new THREE.MeshLambertMaterial({ color: 0x333333 }));
+                    cannonBarrel.rotation.z = Math.PI / 2;
+                    cannonBarrel.position.set(0.6, 0.3, 0);
+                    weapon.add(cannonBarrel);
                     
-                    const wheelGeom = new THREE.CylinderGeometry(0.1, 0.1, 0.05, 8);
-                    const wheel = new THREE.Mesh(wheelGeom, new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
-                    wheel.rotation.z = Math.PI / 2;
-                    weapon.add(wheel);
+                    // Cannon mouth rim
+                    const rimGeom = new THREE.CylinderGeometry(0.26, 0.25, 0.1, 8);
+                    const rim = new THREE.Mesh(rimGeom, new THREE.MeshLambertMaterial({ color: 0x666666 }));
+                    rim.rotation.z = Math.PI / 2;
+                    rim.position.set(1.15, 0.3, 0);
+                    weapon.add(rim);
+                    
+                    // Carriage base
+                    const carriageGeom = new THREE.BoxGeometry(0.6, 0.2, 0.5);
+                    const carriage = new THREE.Mesh(carriageGeom, new THREE.MeshLambertMaterial({ color: 0x654321 }));
+                    carriage.position.y = 0.1;
+                    weapon.add(carriage);
+                    
+                    const wheelGeom = new THREE.CylinderGeometry(0.15, 0.15, 0.08, 8);
+                    const wheel1 = new THREE.Mesh(wheelGeom, new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
+                    wheel1.rotation.x = Math.PI / 2;
+                    wheel1.position.set(0, 0.15, -0.3);
+                    weapon.add(wheel1);
+                    const wheel2 = new THREE.Mesh(wheelGeom, new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
+                    wheel2.rotation.x = Math.PI / 2;
+                    wheel2.position.set(0, 0.15, 0.3);
+                    weapon.add(wheel2);
                     break;
             }
             
@@ -479,9 +582,12 @@
             position: new THREE.Vector3(8, 1, 0), // Start outside hut
             lookAngle: 0,
             isJumping: false,
+            jumpsUsed: 0,
+            maxJumps: 2,
             canAttack: true,
             lastAttackTime: 0,
-            weaponModel: null
+            weaponModel: null,
+            wingFlapTime: 0
         };
 
         player.mesh.position.copy(player.position);
@@ -591,10 +697,25 @@
         // ==================== PROJECTILES ====================
         const projectiles = [];
 
-        function createProjectile(start, direction, config, fromPlayer = true) {
-            const geom = new THREE.SphereGeometry(0.15, 6, 6);
+        function createProjectile(start, direction, config, fromPlayer = true, weaponType = null) {
+            // Make cannon and catapult projectiles much larger (player only)
+            let projectileSize = 0.15;
+            let canPierce = false;
+            
+            // Only apply special projectile properties for player weapons
+            if (fromPlayer && weaponType) {
+                if (weaponType === 'cannon') {
+                    projectileSize = 0.5;
+                    canPierce = true;
+                } else if (weaponType === 'catapult') {
+                    projectileSize = 0.4;
+                    canPierce = true;
+                }
+            }
+            
+            const geom = new THREE.SphereGeometry(projectileSize, 8, 8);
             const mat = new THREE.MeshLambertMaterial({ 
-                color: fromPlayer ? 0xFFFF00 : 0xFF0000 
+                color: fromPlayer ? (canPierce ? 0xFF6600 : 0xFFFF00) : 0xFF0000 
             });
             const mesh = new THREE.Mesh(geom, mat);
             mesh.position.copy(start);
@@ -608,7 +729,9 @@
                 lifetime: 200,
                 isArc: config.type === 'arc',
                 aoe: config.aoe || 0,
-                fromPlayer
+                fromPlayer,
+                canPierce,
+                hitEnemies: []
             });
         }
 
@@ -715,25 +838,33 @@
             let skyColor, fogColor, ambientIntensity, directionalIntensity;
             
             if (cycleProgress < 0.5) {
-                // Day to dusk (0 - 0.5)
+                // Day to dusk (0 - 0.5) - Marsh colors
                 const t = cycleProgress * 2;
                 skyColor = new THREE.Color().lerpColors(
-                    new THREE.Color(0x87CEEB), // Day sky
-                    new THREE.Color(0x1a1a2e), // Night sky
+                    new THREE.Color(0x6B8E7F), // Murky marsh day
+                    new THREE.Color(0x1a2618), // Dark swamp night
                     t
                 );
-                fogColor = skyColor;
+                fogColor = new THREE.Color().lerpColors(
+                    new THREE.Color(0x8B9A8E), // Marsh fog
+                    new THREE.Color(0x2a3a2a), // Night marsh fog
+                    t
+                );
                 ambientIntensity = 0.6 - (t * 0.4);
                 directionalIntensity = 0.8 - (t * 0.6);
             } else {
-                // Night to dawn (0.5 - 1.0)
+                // Night to dawn (0.5 - 1.0) - Marsh colors
                 const t = (cycleProgress - 0.5) * 2;
                 skyColor = new THREE.Color().lerpColors(
-                    new THREE.Color(0x1a1a2e), // Night sky
-                    new THREE.Color(0x87CEEB), // Day sky
+                    new THREE.Color(0x1a2618), // Dark swamp night
+                    new THREE.Color(0x6B8E7F), // Murky marsh day
                     t
                 );
-                fogColor = skyColor;
+                fogColor = new THREE.Color().lerpColors(
+                    new THREE.Color(0x2a3a2a), // Night marsh fog
+                    new THREE.Color(0x8B9A8E), // Marsh fog
+                    t
+                );
                 ambientIntensity = 0.2 + (t * 0.4);
                 directionalIntensity = 0.2 + (t * 0.6);
             }
@@ -749,7 +880,7 @@
             if (gameState.isPaused || gameState.isGameOver) return;
 
             const baseSpeed = 0.06; // Slower base speed
-            const jumpForce = 0.35;
+            const jumpForce = 0.5; // Increased jump force
             const gravity = -0.02;
 
             // Get speed modifier based on terrain
@@ -776,10 +907,28 @@
                 player.velocity.add(right.clone().multiplyScalar(moveSpeed));
             }
 
-            // Jump
-            if (keys[' '] && !player.isJumping) {
-                player.velocity.y = jumpForce;
-                player.isJumping = true;
+            // Double Jump with wing flapping
+            if (keys[' '] && player.jumpsUsed < player.maxJumps) {
+                if (!player.lastJumpKey) {
+                    player.velocity.y = jumpForce;
+                    player.jumpsUsed++;
+                    player.isJumping = true;
+                    player.wingFlapTime = 10; // Wing flap duration
+                    player.lastJumpKey = true;
+                }
+            } else {
+                player.lastJumpKey = false;
+            }
+
+            // Wing flapping animation
+            if (player.wingFlapTime > 0) {
+                player.wingFlapTime--;
+                const flapAngle = Math.sin(player.wingFlapTime * 0.8) * Math.PI / 3;
+                player.mesh.userData.leftWing.rotation.z = -Math.PI / 6 - flapAngle;
+                player.mesh.userData.rightWing.rotation.z = Math.PI / 6 + flapAngle;
+            } else {
+                player.mesh.userData.leftWing.rotation.z = -Math.PI / 6;
+                player.mesh.userData.rightWing.rotation.z = Math.PI / 6;
             }
 
             // Apply velocity
@@ -800,6 +949,7 @@
                 player.position.y = terrainY + 1;
                 player.velocity.y = 0;
                 player.isJumping = false;
+                player.jumpsUsed = 0; // Reset jumps when on ground
             }
 
             // Boundary
@@ -818,6 +968,26 @@
             // Update mesh
             player.mesh.position.copy(player.position);
             player.mesh.rotation.y = player.lookAngle;
+            
+            // Weapon swing animation
+            if (player.weaponModel && player.weaponModel.userData.swingTime > 0) {
+                player.weaponModel.userData.swingTime--;
+                const t = player.weaponModel.userData.swingTime / 15;
+                
+                if (player.weaponModel.userData.swingType === 'arc') {
+                    // Sword arc swing
+                    const swingAngle = Math.sin((1 - t) * Math.PI) * Math.PI / 2;
+                    player.weaponModel.rotation.z = -Math.PI / 4 + swingAngle;
+                    player.weaponModel.rotation.y = Math.sin((1 - t) * Math.PI) * Math.PI / 3;
+                } else if (player.weaponModel.userData.swingType === 'chop') {
+                    // Hammer vertical chop
+                    const chopAngle = Math.sin((1 - t) * Math.PI) * Math.PI / 1.5;
+                    player.weaponModel.rotation.x = -chopAngle;
+                }
+            } else if (player.weaponModel) {
+                // Reset to default position
+                player.weaponModel.rotation.set(0, 0, -Math.PI / 4);
+            }
 
             // Update injuries based on lives lost
             if (gameState.lives <= 2) {
@@ -858,11 +1028,28 @@
                 -Math.cos(player.lookAngle)
             );
             
+            // Weapon swing animation
+            if (player.weaponModel) {
+                if (gameState.currentWeapon === 'sword') {
+                    // Sword wide arc swing animation
+                    player.weaponModel.userData.swingTime = 15;
+                    player.weaponModel.userData.swingType = 'arc';
+                } else if (gameState.currentWeapon === 'hammer') {
+                    // Hammer vertical chop animation
+                    player.weaponModel.userData.swingTime = 20;
+                    player.weaponModel.userData.swingType = 'chop';
+                }
+            }
+            
+            // Better hitbox detection
+            const hitboxMultiplier = gameState.currentWeapon === 'sword' ? 1.3 : 1.0;
+            
             enemies.forEach((enemy, idx) => {
                 const dist = player.position.distanceTo(enemy.position);
-                if (dist < weapon.range) {
+                if (dist < weapon.range * hitboxMultiplier) {
                     const toEnemy = enemy.position.clone().sub(player.position).normalize();
-                    if (attackDir.dot(toEnemy) > 0.5) {
+                    const angleThreshold = gameState.currentWeapon === 'sword' ? 0.3 : 0.5;
+                    if (attackDir.dot(toEnemy) > angleThreshold) {
                         enemy.health -= weapon.damage;
                         if (enemy.health <= 0) {
                             // Gore effect
@@ -890,7 +1077,7 @@
             const start = player.position.clone();
             start.y += 1;
             
-            createProjectile(start, direction, weapon, true);
+            createProjectile(start, direction, weapon, true, gameState.currentWeapon);
         }
 
         function updateEnemies(delta) {
@@ -947,12 +1134,37 @@
                 // Keep on terrain for arc projectiles
                 const terrainY = getTerrainHeight(proj.mesh.position.x, proj.mesh.position.z);
                 
+                // Check obstacle collisions (trees and hut)
+                let hitObstacle = false;
+                for (const obstacle of obstacles) {
+                    const dist = new THREE.Vector2(
+                        proj.mesh.position.x - obstacle.position.x,
+                        proj.mesh.position.z - obstacle.position.z
+                    ).length();
+                    if (dist < obstacle.radius) {
+                        hitObstacle = true;
+                        break;
+                    }
+                }
+                
+                if (hitObstacle) {
+                    proj.lifetime = 0;
+                }
+                
                 // Check collisions
                 if (proj.fromPlayer) {
                     enemies.forEach((enemy, idx) => {
                         const dist = proj.mesh.position.distanceTo(enemy.position);
-                        if (dist < 1) {
+                        // Prevent hitting the same enemy twice with piercing projectiles
+                        const alreadyHit = proj.hitEnemies && proj.hitEnemies.includes(enemy);
+                        
+                        if (dist < 1 && !alreadyHit) {
                             enemy.health -= proj.damage;
+                            
+                            if (proj.canPierce) {
+                                proj.hitEnemies.push(enemy);
+                            }
+                            
                             if (enemy.health <= 0) {
                                 // Gore effect
                                 for (let i = 0; i < 15; i++) {
@@ -963,7 +1175,10 @@
                                 gameState.score += 100;
                                 updateUI();
                             }
-                            proj.lifetime = 0;
+                            
+                            if (!proj.canPierce) {
+                                proj.lifetime = 0;
+                            }
                         }
                     });
                 } else {
