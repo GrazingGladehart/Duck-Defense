@@ -423,7 +423,8 @@
                     weapon.add(hammerHead);
                     
                     const hammerHandleGeom = new THREE.CylinderGeometry(0.06, 0.06, 1, 6);
-                    const hammerHandle = new THREE.Mesh(hammerHandleGeom, handleMat);
+                    const hammerHandleMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                    const hammerHandle = new THREE.Mesh(hammerHandleGeom, hammerHandleMat);
                     hammerHandle.position.y = 0.5;
                     weapon.add(hammerHandle);
                     break;
