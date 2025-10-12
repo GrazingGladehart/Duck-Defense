@@ -1,7 +1,7 @@
 # Duck Defense 3D
 
 ## Overview
-Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a twist on the classic Duck Hunt game - this time, you play as a duck defending yourself against waves of hunters!
+Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a twist on the classic Duck Hunt game - this time, you play as a duck defending yourself against waves of hunters in a murky Florida swamp!
 
 ## Project Structure
 - `index.html` - Single-file game containing HTML, CSS, and JavaScript
@@ -10,19 +10,44 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 ## How to Play
 - **W/A/S/D** - Move forward/left/back/right
 - **MOUSE** - Aim direction  
-- **SPACE** - Jump
+- **SPACE** - Jump (press twice for double jump with wing flapping!)
 - **LEFT CLICK** - Attack/Shoot
 - **Collect weapons** to increase firepower against hunters
 - **Survive as long as possible!**
 
 ## Game Features
-- 3D terrain with hills, trees, water, and bushes
-- Dynamic day/night cycle
-- Multiple weapons: Fists, Sword, Hammer, Rifle, Machine Gun, Catapult, Cannon
+
+### Movement & Combat
+- **Double Jump**: Jump twice in mid-air with animated wing flapping
+- **Enhanced Melee Combat**: 
+  - Sword performs wide arc swing animation with improved hitbox
+  - Hammer delivers powerful vertical chopping strikes
+- **Improved Hitboxes**: Sword has 1.3x range multiplier for better arc coverage
+
+### Weapons
+- **Fists** - Basic melee
+- **Sword** - Enhanced with decorative crossguard, pommel, and blade edge. Wide sweeping attacks
+- **Hammer** - Larger head, longer handle, vertical chopping animation
+- **Rifle** - Standard ranged weapon
+- **Machine Gun** - Rapid fire
+- **Catapult** - Fires large orange projectiles that pierce through multiple enemies
+- **Cannon** - Most powerful weapon with massive piercing projectiles
+
+### Environment - Floridian Marsh
+- Murky marsh atmosphere with humid fog
+- Cypress trees with hanging spanish moss
+- Dark swamp water patches
+- Darker ground vegetation
+- Dynamic day/night cycle with marsh-appropriate colors
+
+### Advanced Mechanics
 - Enemy AI hunters that shoot at the player
+- Projectile collision with trees and hut (both player and enemy projectiles blocked)
+- Piercing projectiles for cannon/catapult (go through multiple enemies)
 - Weapon pickup system
 - Score and lives tracking
 - Progressive difficulty
+- Gore effects and blood particles
 
 ## Technology Stack
 - **Three.js** (r128) - 3D graphics rendering
@@ -33,6 +58,16 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2025-10-12**: Major gameplay enhancements
+  - Added double jump mechanic with wing flapping animation
+  - Enhanced sword with hilt, pommel, and arc swing animation
+  - Improved hammer with larger head and vertical chop animation
+  - Enlarged catapult and cannon weapon models
+  - Made cannon/catapult projectiles larger and able to pierce multiple enemies
+  - Added projectile collision with obstacles (trees and hut)
+  - Transformed environment to floridian marsh theme
+  - Improved combat hitboxes
+  - Fixed projectile system bug preventing enemy projectiles from inheriting player weapon properties
 - **2025-10-12**: Fixed JavaScript bug in weapon model creation (handleMat variable scope issue in hammer case)
 - **2025-10-12**: Initial import and setup in Replit environment
 
