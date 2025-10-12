@@ -153,6 +153,27 @@
             cursor: pointer;
             font-family: inherit;
         }
+
+        #quit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 30px;
+            font-size: 18px;
+            background: rgba(220, 20, 60, 0.8);
+            color: white;
+            border: 2px solid white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            pointer-events: auto;
+            z-index: 15;
+            display: none;
+        }
+
+        #quit-btn:hover {
+            background: rgba(180, 20, 60, 0.9);
+        }
     </style>
 </head>
 <body>
@@ -165,6 +186,8 @@
     <div id="weapon-display">
         Weapon: <span id="current-weapon">Fists</span>
     </div>
+
+    <button id="quit-btn">QUIT TO MENU</button>
 
     <div id="crosshair"></div>
 
@@ -205,11 +228,11 @@
 
         // ==================== WEAPONS CONFIG ====================
         const weapons = {
-            fists: { damage: 10, range: 2, cooldown: 500, type: 'melee' },
-            sword: { damage: 30, range: 3, cooldown: 400, type: 'melee' },
-            hammer: { damage: 50, range: 2.5, cooldown: 800, type: 'melee' },
-            rifle: { damage: 40, range: 50, cooldown: 600, type: 'projectile', speed: 0.8 },
-            machineGun: { damage: 15, range: 50, cooldown: 150, type: 'projectile', speed: 1.0 },
+            fists: { damage: 10, range: 3, cooldown: 500, type: 'melee' },
+            sword: { damage: 30, range: 5, cooldown: 400, type: 'melee' },
+            hammer: { damage: 50, range: 4, cooldown: 800, type: 'melee' },
+            rifle: { damage: 40, range: 100, cooldown: 600, type: 'projectile', speed: 1.2 },
+            machineGun: { damage: 15, range: 20, cooldown: 150, type: 'projectile', speed: 1.0 },
             catapult: { damage: 60, range: 40, cooldown: 1500, type: 'arc', speed: 0.3 },
             cannon: { damage: 100, range: 50, cooldown: 2000, type: 'projectile', speed: 0.5, aoe: 5 }
         };
@@ -267,18 +290,59 @@
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Dark murky swamp water patches
+        // Dark murky swamp water patches with enhanced aesthetics
         const waterZones = [];
         for (let i = 0; i < 40; i++) {
-            const waterGeom = new THREE.CircleGeometry(Math.random() * 4 + 2, 16);
+            const radius = Math.random() * 4 + 2;
+            const waterGeom = new THREE.CircleGeometry(radius, 16);
             const waterMat = new THREE.MeshLambertMaterial({ color: 0x2F4538, transparent: true, opacity: 0.8 }); // Dark swamp water
             const water = new THREE.Mesh(waterGeom, waterMat);
             water.rotation.x = -Math.PI / 2;
             const x = (Math.random() - 0.5) * 90;
             const z = (Math.random() - 0.5) * 90;
-            water.position.set(x, getTerrainHeight(x, z) + 0.05, z);
+            const terrainY = getTerrainHeight(x, z);
+            water.position.set(x, terrainY + 0.05, z);
             scene.add(water);
-            waterZones.push({ position: new THREE.Vector3(x, 0, z), radius: water.geometry.parameters.radius });
+            
+            // Add lily pads floating on larger ponds
+            if (radius > 3) {
+                for (let j = 0; j < 3; j++) {
+                    const lilyGeom = new THREE.CircleGeometry(0.4, 8);
+                    const lilyMat = new THREE.MeshLambertMaterial({ color: 0x4A6741 });
+                    const lily = new THREE.Mesh(lilyGeom, lilyMat);
+                    lily.rotation.x = -Math.PI / 2;
+                    const angle = (j / 3) * Math.PI * 2 + Math.random();
+                    const dist = radius * 0.5 * Math.random();
+                    lily.position.set(x + Math.cos(angle) * dist, terrainY + 0.1, z + Math.sin(angle) * dist);
+                    scene.add(lily);
+                }
+            }
+            
+            // Add reeds/cattails around pond edges
+            const reedCount = Math.floor(radius * 2);
+            for (let j = 0; j < reedCount; j++) {
+                const reedGeom = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 4);
+                const reedMat = new THREE.MeshLambertMaterial({ color: 0x5C6F4E });
+                const reed = new THREE.Mesh(reedGeom, reedMat);
+                const angle = (j / reedCount) * Math.PI * 2;
+                const edgeDist = radius + 0.3 + Math.random() * 0.3;
+                reed.position.set(x + Math.cos(angle) * edgeDist, terrainY + 0.75, z + Math.sin(angle) * edgeDist);
+                reed.rotation.z = (Math.random() - 0.5) * 0.2;
+                scene.add(reed);
+                
+                // Cattail bulb on top
+                const bulbGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 6);
+                const bulbMat = new THREE.MeshLambertMaterial({ color: 0x6B4423 });
+                const bulb = new THREE.Mesh(bulbGeom, bulbMat);
+                bulb.position.set(
+                    x + Math.cos(angle) * edgeDist,
+                    terrainY + 1.5,
+                    z + Math.sin(angle) * edgeDist
+                );
+                scene.add(bulb);
+            }
+            
+            waterZones.push({ position: new THREE.Vector3(x, 0, z), radius: radius });
         }
 
         // Cypress trees with spanish moss (collision obstacles)
@@ -323,9 +387,15 @@
             const x = (Math.random() - 0.5) * 80;
             const z = (Math.random() - 0.5) * 80;
             if (Math.abs(x) > 10 || Math.abs(z) > 10) {
-                tree.position.set(x, getTerrainHeight(x, z), z);
+                const terrainY = getTerrainHeight(x, z);
+                tree.position.set(x, terrainY, z);
                 scene.add(tree);
-                obstacles.push({ position: new THREE.Vector3(x, 0, z), radius: 0.5 });
+                obstacles.push({ 
+                    position: new THREE.Vector3(x, 0, z), 
+                    radius: 0.5, 
+                    type: 'tree',
+                    walkableHeight: terrainY + 5  // Top of trunk at y=5 from base
+                });
             }
         }
 
@@ -349,31 +419,172 @@
             bushZones.push({ position: new THREE.Vector3(x, 0, z), radius: 1.2 });
         }
 
-        // Hut (collision obstacle)
+        // Garbage piles - aesthetic swamp trash
+        function createGarbagePile() {
+            const pile = new THREE.Group();
+            
+            // Various junk pieces
+            for (let i = 0; i < 5; i++) {
+                const junkGeom = new THREE.BoxGeometry(
+                    Math.random() * 0.5 + 0.2,
+                    Math.random() * 0.4 + 0.1,
+                    Math.random() * 0.5 + 0.2
+                );
+                const junkColors = [0x3A3A3A, 0x5C4033, 0x2F2F2F, 0x8B4513];
+                const junkMat = new THREE.MeshLambertMaterial({ color: junkColors[Math.floor(Math.random() * junkColors.length)] });
+                const junk = new THREE.Mesh(junkGeom, junkMat);
+                junk.position.set(
+                    (Math.random() - 0.5) * 0.8,
+                    Math.random() * 0.3,
+                    (Math.random() - 0.5) * 0.8
+                );
+                junk.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                pile.add(junk);
+            }
+            
+            return pile;
+        }
+
+        for (let i = 0; i < 12; i++) {
+            const garbagePile = createGarbagePile();
+            const x = (Math.random() - 0.5) * 70;
+            const z = (Math.random() - 0.5) * 70;
+            garbagePile.position.set(x, getTerrainHeight(x, z), z);
+            scene.add(garbagePile);
+        }
+
+        // Glowing lanterns - atmospheric marsh lighting
+        function createLantern() {
+            const lantern = new THREE.Group();
+            
+            // Pole
+            const poleGeom = new THREE.CylinderGeometry(0.05, 0.05, 2.5, 6);
+            const poleMat = new THREE.MeshLambertMaterial({ color: 0x2F2F2F });
+            const pole = new THREE.Mesh(poleGeom, poleMat);
+            pole.position.y = 1.25;
+            lantern.add(pole);
+            
+            // Lantern cage
+            const cageGeom = new THREE.BoxGeometry(0.3, 0.4, 0.3);
+            const cageMat = new THREE.MeshLambertMaterial({ color: 0x1A1A1A });
+            const cage = new THREE.Mesh(cageGeom, cageMat);
+            cage.position.y = 2.6;
+            lantern.add(cage);
+            
+            // Glowing light inside
+            const lightGeom = new THREE.SphereGeometry(0.15, 8, 8);
+            const lightMat = new THREE.MeshLambertMaterial({ 
+                color: 0xFFAA00, 
+                emissive: 0xFFAA00, 
+                emissiveIntensity: 1 
+            });
+            const light = new THREE.Mesh(lightGeom, lightMat);
+            light.position.y = 2.6;
+            lantern.add(light);
+            
+            // Point light for glow
+            const pointLight = new THREE.PointLight(0xFFAA00, 0.5, 8);
+            pointLight.position.y = 2.6;
+            lantern.add(pointLight);
+            
+            return lantern;
+        }
+
+        for (let i = 0; i < 10; i++) {
+            const lantern = createLantern();
+            const angle = (i / 10) * Math.PI * 2;
+            const distance = 20 + Math.random() * 15;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+            lantern.position.set(x, getTerrainHeight(x, z), z);
+            scene.add(lantern);
+        }
+
+        // Hut (collision obstacle) - Complex marsh-blended design
         function createHut() {
             const hut = new THREE.Group();
             
+            // Weathered wooden stilts/supports for swamp
+            const stiltMat = new THREE.MeshLambertMaterial({ color: 0x3A2817 });
+            for (let i = 0; i < 4; i++) {
+                const stiltGeom = new THREE.CylinderGeometry(0.2, 0.25, 2, 6);
+                const stilt = new THREE.Mesh(stiltGeom, stiltMat);
+                const x = i < 2 ? -3 : 3;
+                const z = i % 2 === 0 ? -3 : 3;
+                stilt.position.set(x, 1, z);
+                stilt.castShadow = true;
+                hut.add(stilt);
+            }
+            
+            // Main cabin - weathered wood planks
             const baseGeom = new THREE.BoxGeometry(8, 4, 8);
-            const baseMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            const baseMat = new THREE.MeshLambertMaterial({ color: 0x5C4033 }); // Darker weathered wood
             const base = new THREE.Mesh(baseGeom, baseMat);
             base.position.y = 2;
             base.castShadow = true;
             hut.add(base);
             
+            // Horizontal planks detail
+            for (let i = 0; i < 5; i++) {
+                const plankGeom = new THREE.BoxGeometry(8.1, 0.15, 8.1);
+                const plankMat = new THREE.MeshLambertMaterial({ color: 0x4A3528 });
+                const plank = new THREE.Mesh(plankGeom, plankMat);
+                plank.position.y = 0.5 + i * 0.8;
+                hut.add(plank);
+            }
+            
+            // Mossy overgrowth on sides
+            const mossMat = new THREE.MeshLambertMaterial({ color: 0x6B8E6B });
+            for (let i = 0; i < 8; i++) {
+                const mossGeom = new THREE.BoxGeometry(0.2, 1.2, 0.3);
+                const moss = new THREE.Mesh(mossGeom, mossMat);
+                const angle = (i / 8) * Math.PI * 2;
+                moss.position.set(Math.cos(angle) * 4.1, 2 + Math.random(), Math.sin(angle) * 4.1);
+                moss.rotation.y = angle;
+                hut.add(moss);
+            }
+            
+            // Thatched roof - darker swamp reeds
             const roofGeom = new THREE.ConeGeometry(6, 3, 4);
-            const roofMat = new THREE.MeshLambertMaterial({ color: 0xDC143C });
+            const roofMat = new THREE.MeshLambertMaterial({ color: 0x6B5D4F }); // Dark thatch
             const roof = new THREE.Mesh(roofGeom, roofMat);
             roof.position.y = 5.5;
             roof.rotation.y = Math.PI / 4;
             roof.castShadow = true;
             hut.add(roof);
             
+            // Roof moss patches
+            for (let i = 0; i < 6; i++) {
+                const roofMossGeom = new THREE.BoxGeometry(1, 0.1, 1);
+                const roofMoss = new THREE.Mesh(roofMossGeom, mossMat);
+                const angle = (i / 6) * Math.PI * 2;
+                roofMoss.position.set(Math.cos(angle) * 2, 5.5 + Math.random() * 0.5, Math.sin(angle) * 2);
+                roofMoss.rotation.y = angle;
+                hut.add(roofMoss);
+            }
+            
+            // Small door
+            const doorGeom = new THREE.BoxGeometry(1.5, 2.5, 0.1);
+            const doorMat = new THREE.MeshLambertMaterial({ color: 0x2F1F10 });
+            const door = new THREE.Mesh(doorGeom, doorMat);
+            door.position.set(0, 1.5, 4.05);
+            hut.add(door);
+            
             return hut;
         }
 
         const hut = createHut();
         scene.add(hut);
-        obstacles.push({ position: new THREE.Vector3(0, 0, 0), radius: 4.5 });
+        obstacles.push({ 
+            position: new THREE.Vector3(0, 0, 0), 
+            radius: 4.5,
+            type: 'hut',
+            walkableHeight: 4  // Top of base at y=4
+        });
 
         // ==================== DUCK PLAYER ====================
         function createDuck() {
@@ -411,7 +622,7 @@
             duck.add(leftEye, rightEye);
             
             // Wings
-            const wingGeom = new THREE.BoxGeometry(0.6, 0.1, 0.4);
+            const wingGeom = new THREE.BoxGeometry(0.8, 0.1, 0.5);
             const wingMat = new THREE.MeshLambertMaterial({ color: 0xFFDD00 });
             const leftWing = new THREE.Mesh(wingGeom, wingMat);
             leftWing.position.set(-0.5, 0.2, 0);
@@ -583,11 +794,12 @@
             lookAngle: 0,
             isJumping: false,
             jumpsUsed: 0,
-            maxJumps: 2,
+            maxJumps: 3,
             canAttack: true,
             lastAttackTime: 0,
             weaponModel: null,
-            wingFlapTime: 0
+            wingFlapTime: 0,
+            bloodDripCounter: 0
         };
 
         player.mesh.position.copy(player.position);
@@ -654,24 +866,160 @@
             return hunter;
         }
 
-        function createBloodParticle(position) {
-            const geom = new THREE.SphereGeometry(0.1, 4, 4);
-            const mat = new THREE.MeshLambertMaterial({ color: 0x8B0000 });
+        function createAlligator() {
+            const gator = new THREE.Group();
+            
+            // Body - long and low
+            const bodyGeom = new THREE.BoxGeometry(2.5, 0.5, 0.8);
+            const bodyMat = new THREE.MeshLambertMaterial({ color: 0x3A5F3A }); // Dark green
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            body.position.y = 0.25;
+            body.castShadow = true;
+            gator.add(body);
+            
+            // Head - wider at the front
+            const headGeom = new THREE.BoxGeometry(0.8, 0.4, 0.9);
+            const head = new THREE.Mesh(headGeom, bodyMat);
+            head.position.set(1.5, 0.25, 0);
+            head.castShadow = true;
+            gator.add(head);
+            
+            // Snout
+            const snoutGeom = new THREE.BoxGeometry(0.5, 0.2, 0.6);
+            const snout = new THREE.Mesh(snoutGeom, new THREE.MeshLambertMaterial({ color: 0x2F4F2F }));
+            snout.position.set(1.9, 0.2, 0);
+            gator.add(snout);
+            
+            // Eyes
+            const eyeGeom = new THREE.SphereGeometry(0.1, 6, 6);
+            const eyeMat = new THREE.MeshLambertMaterial({ color: 0xFFFF00 });
+            const eye1 = new THREE.Mesh(eyeGeom, eyeMat);
+            eye1.position.set(1.7, 0.4, 0.3);
+            gator.add(eye1);
+            const eye2 = new THREE.Mesh(eyeGeom, eyeMat);
+            eye2.position.set(1.7, 0.4, -0.3);
+            gator.add(eye2);
+            
+            // Tail
+            const tailGeom = new THREE.ConeGeometry(0.4, 1.2, 4);
+            const tail = new THREE.Mesh(tailGeom, bodyMat);
+            tail.rotation.z = -Math.PI / 2;
+            tail.position.set(-1.8, 0.25, 0);
+            tail.castShadow = true;
+            gator.add(tail);
+            
+            // Spikes on back
+            for (let i = 0; i < 6; i++) {
+                const spikeGeom = new THREE.ConeGeometry(0.1, 0.3, 4);
+                const spike = new THREE.Mesh(spikeGeom, new THREE.MeshLambertMaterial({ color: 0x2F4F2F }));
+                spike.position.set(-0.8 + i * 0.5, 0.5, 0);
+                gator.add(spike);
+            }
+            
+            return gator;
+        }
+
+        // Alligators array
+        const alligators = [];
+        
+        // Spawn alligators near water zones
+        for (let i = 0; i < 8; i++) {
+            const waterZone = waterZones[Math.floor(Math.random() * waterZones.length)];
+            const angle = Math.random() * Math.PI * 2;
+            const dist = waterZone.radius + 1;
+            const x = waterZone.position.x + Math.cos(angle) * dist;
+            const z = waterZone.position.z + Math.sin(angle) * dist;
+            
+            const gator = {
+                mesh: createAlligator(),
+                position: new THREE.Vector3(x, getTerrainHeight(x, z), z),
+                angle: angle,
+                homePosition: new THREE.Vector3(x, 0, z),
+                patrolRadius: 5,
+                lastBiteTime: 0,
+                biteCooldown: 2000
+            };
+            
+            gator.mesh.position.copy(gator.position);
+            gator.mesh.rotation.y = angle;
+            scene.add(gator.mesh);
+            alligators.push(gator);
+        }
+
+        function createBloodParticle(position, type = 'normal') {
+            // Different sizes and colors based on type
+            let size = 0.1;
+            let color = 0x8B0000;
+            let lifetime = 60;
+            
+            if (type === 'large') {
+                size = 0.2;
+                color = 0xFF0000; // Brighter red for large chunks
+                lifetime = 80;
+            } else if (type === 'spray') {
+                size = 0.08;
+                color = 0x660000; // Darker spray
+                lifetime = 40;
+            }
+            
+            const geom = new THREE.SphereGeometry(size, 4, 4);
+            const mat = new THREE.MeshLambertMaterial({ color: color });
             const particle = new THREE.Mesh(geom, mat);
             particle.position.copy(position);
             particle.castShadow = true;
             scene.add(particle);
             
-            const vel = new THREE.Vector3(
-                (Math.random() - 0.5) * 0.3,
-                Math.random() * 0.3 + 0.2,
-                (Math.random() - 0.5) * 0.3
-            );
+            // Different velocity patterns based on type
+            let vel;
+            if (type === 'spray') {
+                vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.15,
+                    Math.random() * 0.15,
+                    (Math.random() - 0.5) * 0.15
+                );
+            } else {
+                vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.4,
+                    Math.random() * 0.4 + 0.2,
+                    (Math.random() - 0.5) * 0.4
+                );
+            }
             
             bloodParticles.push({
                 mesh: particle,
                 velocity: vel,
-                lifetime: 60
+                lifetime: lifetime
+            });
+        }
+
+        // Wind streak particles for weapon swings
+        const windStreaks = [];
+        
+        function createWindStreak(position, direction, weaponType) {
+            // Create elongated wind streak particles
+            const geom = weaponType === 'sword' ? 
+                new THREE.BoxGeometry(0.15, 0.05, 0.8) : // Sword - long thin streak
+                new THREE.BoxGeometry(0.2, 0.2, 0.6);     // Hammer - thicker streak
+            
+            const mat = new THREE.MeshLambertMaterial({ 
+                color: 0xFFFFFF, 
+                transparent: true, 
+                opacity: 0.8 
+            });
+            const streak = new THREE.Mesh(geom, mat);
+            streak.position.copy(position);
+            
+            // Orient streak along swing direction
+            const angle = Math.atan2(direction.x, direction.z);
+            streak.rotation.y = angle;
+            
+            scene.add(streak);
+            
+            windStreaks.push({
+                mesh: streak,
+                velocity: direction.clone().multiplyScalar(0.3),
+                lifetime: 12,
+                initialOpacity: 0.8
             });
         }
 
@@ -879,9 +1227,9 @@
         function updatePlayer(delta) {
             if (gameState.isPaused || gameState.isGameOver) return;
 
-            const baseSpeed = 0.06; // Slower base speed
-            const jumpForce = 0.5; // Increased jump force
-            const gravity = -0.02;
+            const baseSpeed = 0.05; // Slower base speed
+            const jumpForce = 0.75; // Increased jump force
+            const gravity = -0.04;
 
             // Get speed modifier based on terrain
             const speedModifier = getSpeedModifier(player.position);
@@ -942,11 +1290,28 @@
                 player.velocity.z *= -0.5;
             }
 
-            // Gravity and terrain collision
+            // Gravity and terrain/structure collision
             player.velocity.y += gravity;
             const terrainY = getTerrainHeight(player.position.x, player.position.z);
-            if (player.position.y <= terrainY + 1) {
-                player.position.y = terrainY + 1;
+            
+            // Check if player is above a walkable structure (hut or tree)
+            let groundY = terrainY;
+            for (const obstacle of obstacles) {
+                if (obstacle.walkableHeight) {
+                    const dist2D = Math.sqrt(
+                        Math.pow(player.position.x - obstacle.position.x, 2) +
+                        Math.pow(player.position.z - obstacle.position.z, 2)
+                    );
+                    
+                    // If player is within structure radius and above it, use structure height
+                    if (dist2D < obstacle.radius && player.position.y >= obstacle.walkableHeight - 1) {
+                        groundY = Math.max(groundY, obstacle.walkableHeight);
+                    }
+                }
+            }
+            
+            if (player.position.y <= groundY + 1) {
+                player.position.y = groundY + 1;
                 player.velocity.y = 0;
                 player.isJumping = false;
                 player.jumpsUsed = 0; // Reset jumps when on ground
@@ -992,6 +1357,16 @@
             // Update injuries based on lives lost
             if (gameState.lives <= 2) {
                 player.mesh.userData.body.material.color.setHex(0xFFCC00);
+                
+                // Blood trail when injured - drip every few frames
+                player.bloodDripCounter++;
+                const dripRate = gameState.lives === 1 ? 8 : 15; // More frequent when more injured
+                if (player.bloodDripCounter >= dripRate) {
+                    player.bloodDripCounter = 0;
+                    const dripPos = player.position.clone();
+                    dripPos.y += 0.3;
+                    createBloodParticle(dripPos, 'spray');
+                }
             }
             if (gameState.lives <= 1) {
                 player.mesh.userData.head.material.color.setHex(0xFF8800);
@@ -1041,20 +1416,52 @@
                 }
             }
             
-            // Better hitbox detection
-            const hitboxMultiplier = gameState.currentWeapon === 'sword' ? 1.3 : 1.0;
+            // Create dramatic wind streak effects for melee weapons
+            if (gameState.currentWeapon === 'sword' || gameState.currentWeapon === 'hammer') {
+                const streakCount = gameState.currentWeapon === 'sword' ? 8 : 5;
+                for (let i = 0; i < streakCount; i++) {
+                    const offset = player.position.clone();
+                    offset.y += 1 + (Math.random() - 0.5) * 0.4;
+                    
+                    // Spread streaks in arc for sword, forward for hammer
+                    let dir = attackDir.clone();
+                    if (gameState.currentWeapon === 'sword') {
+                        const spread = (i / streakCount - 0.5) * 1.5;
+                        dir = new THREE.Vector3(
+                            -Math.sin(player.lookAngle + spread),
+                            (Math.random() - 0.5) * 0.2,
+                            -Math.cos(player.lookAngle + spread)
+                        ).normalize();
+                    }
+                    
+                    offset.add(dir.clone().multiplyScalar(1 + i * 0.3));
+                    createWindStreak(offset, dir, gameState.currentWeapon);
+                }
+            }
+            
+            // Better hitbox detection - larger multipliers and more forgiving angles
+            let hitboxMultiplier = 1.5; // Base multiplier for all melee
+            if (gameState.currentWeapon === 'sword') hitboxMultiplier = 1.6;
+            if (gameState.currentWeapon === 'hammer') hitboxMultiplier = 1.4;
             
             enemies.forEach((enemy, idx) => {
                 const dist = player.position.distanceTo(enemy.position);
                 if (dist < weapon.range * hitboxMultiplier) {
                     const toEnemy = enemy.position.clone().sub(player.position).normalize();
-                    const angleThreshold = gameState.currentWeapon === 'sword' ? 0.3 : 0.5;
+                    const angleThreshold = gameState.currentWeapon === 'sword' ? 0.2 : 0.4; // Lower = wider cone
                     if (attackDir.dot(toEnemy) > angleThreshold) {
                         enemy.health -= weapon.damage;
                         if (enemy.health <= 0) {
-                            // Gore effect
-                            for (let i = 0; i < 15; i++) {
-                                createBloodParticle(enemy.position.clone());
+                            // Enhanced graphic gore effect
+                            // Large splatter burst
+                            for (let i = 0; i < 30; i++) {
+                                createBloodParticle(enemy.position.clone(), Math.random() < 0.3 ? 'large' : 'normal');
+                            }
+                            // Blood spray in attack direction
+                            for (let i = 0; i < 10; i++) {
+                                const spray = enemy.position.clone();
+                                spray.add(attackDir.clone().multiplyScalar(i * 0.3));
+                                createBloodParticle(spray, 'spray');
                             }
                             scene.remove(enemy.mesh);
                             enemies.splice(idx, 1);
@@ -1118,6 +1525,57 @@
                 spawnEnemy();
                 gameState.enemySpawnRate = Math.max(1000, gameState.enemySpawnRate - 50);
             }
+        }
+
+        function updateAlligators(delta) {
+            if (gameState.isPaused || gameState.isGameOver) return;
+            
+            const now = Date.now();
+            
+            alligators.forEach(gator => {
+                // Patrol around home position
+                const toHome = gator.homePosition.clone().sub(new THREE.Vector3(gator.position.x, 0, gator.position.z));
+                const homeDistance = toHome.length();
+                
+                // Wander if too far from home
+                if (homeDistance > gator.patrolRadius) {
+                    toHome.normalize().multiplyScalar(0.03);
+                    gator.position.x += toHome.x;
+                    gator.position.z += toHome.z;
+                } else {
+                    // Slow patrol
+                    gator.angle += 0.01;
+                    gator.position.x = gator.homePosition.x + Math.cos(gator.angle) * 2;
+                    gator.position.z = gator.homePosition.z + Math.sin(gator.angle) * 2;
+                }
+                
+                // Keep on terrain
+                const terrainY = getTerrainHeight(gator.position.x, gator.position.z);
+                gator.position.y = terrainY;
+                
+                // Update mesh
+                gator.mesh.position.copy(gator.position);
+                gator.mesh.rotation.y = gator.angle;
+                
+                // Check if player is close enough to bite
+                const toPlayer = player.position.clone().sub(gator.position);
+                const distToPlayer = toPlayer.length();
+                
+                if (distToPlayer < 2.5 && now - gator.lastBiteTime > gator.biteCooldown) {
+                    gator.lastBiteTime = now;
+                    gameState.lives--;
+                    
+                    // Blood splash when bitten
+                    for (let i = 0; i < 10; i++) {
+                        createBloodParticle(player.position.clone(), Math.random() < 0.5 ? 'large' : 'normal');
+                    }
+                    
+                    updateUI();
+                    if (gameState.lives <= 0) {
+                        gameOver();
+                    }
+                }
+            });
         }
 
         function updateProjectiles(delta) {
@@ -1229,6 +1687,26 @@
             }
         }
 
+        function updateWindStreaks(delta) {
+            for (let i = windStreaks.length - 1; i >= 0; i--) {
+                const streak = windStreaks[i];
+                
+                // Move forward and fade out
+                streak.mesh.position.add(streak.velocity);
+                streak.lifetime--;
+                
+                // Fade out opacity and scale
+                const fadeProgress = streak.lifetime / 12;
+                streak.mesh.material.opacity = streak.initialOpacity * fadeProgress;
+                streak.mesh.scale.multiplyScalar(0.92);
+                
+                if (streak.lifetime <= 0) {
+                    scene.remove(streak.mesh);
+                    windStreaks.splice(i, 1);
+                }
+            }
+        }
+
         function updatePickups(delta) {
             pickups.forEach((pickup, idx) => {
                 pickup.rotation += 0.02;
@@ -1290,11 +1768,41 @@
             enemies.forEach(e => scene.remove(e.mesh));
             enemies.length = 0;
             
+            alligators.forEach(g => scene.remove(g.mesh));
+            alligators.length = 0;
+            
+            // Respawn alligators
+            for (let i = 0; i < 8; i++) {
+                const waterZone = waterZones[Math.floor(Math.random() * waterZones.length)];
+                const angle = Math.random() * Math.PI * 2;
+                const dist = waterZone.radius + 1;
+                const x = waterZone.position.x + Math.cos(angle) * dist;
+                const z = waterZone.position.z + Math.sin(angle) * dist;
+                
+                const gator = {
+                    mesh: createAlligator(),
+                    position: new THREE.Vector3(x, getTerrainHeight(x, z), z),
+                    angle: angle,
+                    homePosition: new THREE.Vector3(x, 0, z),
+                    patrolRadius: 5,
+                    lastBiteTime: 0,
+                    biteCooldown: 2000
+                };
+                
+                gator.mesh.position.copy(gator.position);
+                gator.mesh.rotation.y = angle;
+                scene.add(gator.mesh);
+                alligators.push(gator);
+            }
+            
             projectiles.forEach(p => scene.remove(p.mesh));
             projectiles.length = 0;
             
             bloodParticles.forEach(p => scene.remove(p.mesh));
             bloodParticles.length = 0;
+            
+            windStreaks.forEach(w => scene.remove(w.mesh));
+            windStreaks.length = 0;
             
             document.getElementById('game-over').style.display = 'none';
             updateUI();
@@ -1303,6 +1811,7 @@
         // ==================== EVENT LISTENERS ====================
         document.getElementById('start-btn').addEventListener('click', () => {
             document.getElementById('instructions').style.display = 'none';
+            document.getElementById('quit-btn').style.display = 'block';
             gameState.isPaused = false;
             gameState.gameStartTime = Date.now();
             gameState.lastSpawnTime = Date.now();
@@ -1310,6 +1819,47 @@
 
         document.getElementById('restart-btn').addEventListener('click', () => {
             resetGame();
+        });
+
+        document.getElementById('quit-btn').addEventListener('click', () => {
+            gameState.isPaused = true;
+            document.getElementById('quit-btn').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+            
+            // Reset game state without showing game over
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.currentWeapon = 'fists';
+            gameState.enemySpawnRate = 3000;
+            player.position.set(8, 1, 0);
+            player.velocity.set(0, 0, 0);
+            player.isJumping = false;
+            player.jumpsUsed = 0;
+            player.bloodDripCounter = 0;
+            
+            // Reset player appearance
+            player.mesh.userData.body.material.color.setHex(0xFFFF00);
+            player.mesh.userData.head.material.color.setHex(0xFFFF00);
+            player.mesh.rotation.x = 0;
+            
+            updatePlayerWeapon();
+            
+            enemies.forEach(e => scene.remove(e.mesh));
+            enemies.length = 0;
+            
+            alligators.forEach(g => scene.remove(g.mesh));
+            alligators.length = 0;
+            
+            projectiles.forEach(p => scene.remove(p.mesh));
+            projectiles.length = 0;
+            
+            bloodParticles.forEach(p => scene.remove(p.mesh));
+            bloodParticles.length = 0;
+            
+            windStreaks.forEach(w => scene.remove(w.mesh));
+            windStreaks.length = 0;
+            
+            updateUI();
         });
 
         window.addEventListener('resize', () => {
@@ -1335,8 +1885,10 @@
             updateDayNight();
             updatePlayer(delta);
             updateEnemies(delta);
+            updateAlligators(delta);
             updateProjectiles(delta);
             updateBloodParticles(delta);
+            updateWindStreaks(delta);
             updatePickups(delta);
             
             renderer.render(scene, camera);
