@@ -2369,15 +2369,7 @@
                     if (dist < stompRadius) {
                         enemy.health -= 100;
                         if (enemy.health <= 0) {
-                            for (let j = 0; j < 20; j++) {
-                                createBloodParticle(enemy.position.clone(), 'large');
-                            }
-                            scene.remove(enemy.mesh);
-                            enemies.splice(i, 1);
-                            gameState.kills++;
-                            trackKill('turkeyStomp');
-                            createSpecialOrb(enemy.position.clone());
-                            updateUI();
+                            handleEnemyDeath(enemy, i, 'turkeyStomp');
                         }
                     }
                 }
@@ -2520,15 +2512,7 @@
                 if (dist < radius) {
                     enemy.health -= damage;
                     if (enemy.health <= 0) {
-                        for (let j = 0; j < 20; j++) {
-                            createBloodParticle(enemy.position.clone(), 'large');
-                        }
-                        scene.remove(enemy.mesh);
-                        enemies.splice(i, 1);
-                        gameState.kills++;
-                        trackKill('freedomBombs');
-                        createSpecialOrb(enemy.position.clone());
-                        updateUI();
+                        handleEnemyDeath(enemy, i, 'freedomBombs');
                     }
                 }
             }
@@ -2903,15 +2887,7 @@
                 if (dist < strikeRadius) {
                     enemy.health -= 80;
                     if (enemy.health <= 0) {
-                        for (let j = 0; j < 20; j++) {
-                            createBloodParticle(enemy.position.clone(), 'large');
-                        }
-                        scene.remove(enemy.mesh);
-                        enemies.splice(i, 1);
-                        gameState.kills++;
-                        trackKill('eagleStrike');
-                        createSpecialOrb(enemy.position.clone());
-                        updateUI();
+                        handleEnemyDeath(enemy, i, 'eagleStrike');
                     }
                 }
             }
@@ -3017,15 +2993,7 @@
                 if (dist < range) {
                     enemy.health -= damage;
                     if (enemy.health <= 0) {
-                        for (let i = 0; i < 15; i++) {
-                            createBloodParticle(enemy.position.clone(), 'large');
-                        }
-                        scene.remove(enemy.mesh);
-                        enemies.splice(idx, 1);
-                        gameState.kills++;
-                        trackKill('martialArts');
-                        createSpecialOrb(enemy.position.clone());
-                        updateUI();
+                        handleEnemyDeath(enemy, idx, 'martialArts');
                     }
                 }
             });
@@ -3096,23 +3064,7 @@
                     if (attackDir.dot(toEnemy) > angleThreshold) {
                         enemy.health -= weapon.damage;
                         if (enemy.health <= 0) {
-                            // Enhanced graphic gore effect
-                            // Large splatter burst
-                            for (let i = 0; i < 30; i++) {
-                                createBloodParticle(enemy.position.clone(), Math.random() < 0.3 ? 'large' : 'normal');
-                            }
-                            // Blood spray in attack direction
-                            for (let i = 0; i < 10; i++) {
-                                const spray = enemy.position.clone();
-                                spray.add(attackDir.clone().multiplyScalar(i * 0.3));
-                                createBloodParticle(spray, 'spray');
-                            }
-                            scene.remove(enemy.mesh);
-                            enemies.splice(idx, 1);
-                            gameState.kills++;
-                            trackKill(gameState.currentWeapon);
-                            createSpecialOrb(enemy.position.clone());
-                            updateUI();
+                            handleEnemyDeath(enemy, idx, gameState.currentWeapon);
                         }
                     }
                 }
@@ -3152,15 +3104,7 @@
                         enemy.mesh.position.copy(enemy.position);
                         
                         if (enemy.health <= 0) {
-                            for (let j = 0; j < 20; j++) {
-                                createBloodParticle(enemy.position.clone(), 'large');
-                            }
-                            scene.remove(enemy.mesh);
-                            enemies.splice(i, 1);
-                            gameState.kills++;
-                            trackKill('helmetCharge');
-                            createSpecialOrb(enemy.position.clone());
-                            updateUI();
+                            handleEnemyDeath(enemy, i, 'helmetCharge');
                         }
                     }
                 }
@@ -3305,21 +3249,17 @@
                     player.mesh.visible = false;
                     
                     // Run over enemies!
-                    enemies.forEach((enemy, idx) => {
+                    for (let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
+                        const enemy = enemies[eIdx];
                         const dist = vehicle.position.distanceTo(enemy.position);
                         if (dist < 3) {
-                            for (let i = 0; i < 20; i++) {
-                                createBloodParticle(enemy.position.clone(), Math.random() < 0.3 ? 'large' : 'normal');
+                            enemy.health -= 150; // Instant kill for most enemies
+                            if (enemy.health <= 0) {
+                                const died = handleEnemyDeath(enemy, eIdx, 'vehicle');
+                                if (died) sessionStats.vehicleKills++;
                             }
-                            scene.remove(enemy.mesh);
-                            enemies.splice(idx, 1);
-                            gameState.kills++;
-                            trackKill('vehicle');
-                            createSpecialOrb(enemy.position.clone());
-                            sessionStats.vehicleKills++;
-                            updateUI();
                         }
-                    });
+                    }
                     
                     // Track vehicle time
                     sessionStats.vehicleTime += delta / 1000;
@@ -3513,7 +3453,8 @@
                     if (proj.weaponType === 'cannon') hitRadius = 3.0;
                     if (proj.weaponType === 'catapult') hitRadius = 2.5;
                     
-                    enemies.forEach((enemy, idx) => {
+                    for (let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
+                        const enemy = enemies[eIdx];
                         const dist = proj.mesh.position.distanceTo(enemy.position);
                         const alreadyHit = proj.hitEnemies && proj.hitEnemies.includes(enemy);
                         
@@ -3525,22 +3466,14 @@
                             }
                             
                             if (enemy.health <= 0) {
-                                for (let i = 0; i < 15; i++) {
-                                    createBloodParticle(enemy.position.clone());
-                                }
-                                scene.remove(enemy.mesh);
-                                enemies.splice(idx, 1);
-                                gameState.kills++;
-                                trackKill(proj.weaponType || gameState.currentWeapon);
-                                createSpecialOrb(enemy.position.clone());
-                                updateUI();
+                                handleEnemyDeath(enemy, eIdx, proj.weaponType || gameState.currentWeapon);
                             }
                             
                             if (!proj.canPierce) {
                                 proj.lifetime = 0;
                             }
                         }
-                    });
+                    }
                     
                     // Hit vehicle drivers
                     vehicles.forEach((vehicle, vIdx) => {
@@ -3578,8 +3511,45 @@
                 } else {
                     // Enemy projectile hitting player
                     const distToPlayer = proj.mesh.position.distanceTo(player.position);
-                    if (distToPlayer < 1.2) {
-                        gameState.lives--;
+                    const terrainAtProj = getTerrainHeight(proj.mesh.position.x, proj.mesh.position.z);
+                    
+                    // Explosive projectiles from catapult hunters
+                    if (proj.isExplosive && proj.mesh.position.y <= terrainAtProj + 0.5) {
+                        const blastRadius = proj.explosionRadius || 4;
+                        
+                        // Create explosion effect
+                        for (let j = 0; j < 12; j++) {
+                            const particle = new THREE.Mesh(
+                                new THREE.SphereGeometry(0.25, 6, 6),
+                                new THREE.MeshLambertMaterial({ color: 0x8B0000 })
+                            );
+                            particle.position.copy(proj.mesh.position);
+                            scene.add(particle);
+                            const vel = new THREE.Vector3(
+                                (Math.random() - 0.5) * 0.4,
+                                Math.random() * 0.3,
+                                (Math.random() - 0.5) * 0.4
+                            );
+                            bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 25 });
+                        }
+                        
+                        // Check if player is in blast radius
+                        if (distToPlayer < blastRadius) {
+                            const damage = Math.ceil(proj.damage * (1 - distToPlayer / blastRadius));
+                            gameState.lives -= damage;
+                            updateUI();
+                            
+                            for (let i = 0; i < 8; i++) {
+                                createBloodParticle(player.position.clone());
+                            }
+                            
+                            if (gameState.lives <= 0) {
+                                gameOver();
+                            }
+                        }
+                        proj.lifetime = 0;
+                    } else if (distToPlayer < 1.2) {
+                        gameState.lives -= proj.damage;
                         updateUI();
                         proj.lifetime = 0;
                         
@@ -3614,24 +3584,17 @@
                     }
                     
                     // Damage all enemies in blast radius
-                    enemies.forEach((enemy, idx) => {
+                    for (let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
+                        const enemy = enemies[eIdx];
                         const dist = proj.mesh.position.distanceTo(enemy.position);
                         if (dist < blastRadius) {
                             const damage = proj.damage * (1 - dist / blastRadius);
                             enemy.health -= damage;
                             if (enemy.health <= 0) {
-                                for (let k = 0; k < 20; k++) {
-                                    createBloodParticle(enemy.position.clone(), 'large');
-                                }
-                                scene.remove(enemy.mesh);
-                                enemies.splice(idx, 1);
-                                gameState.kills++;
-                                trackKill('catapult');
-                                createSpecialOrb(enemy.position.clone());
-                                updateUI();
+                                handleEnemyDeath(enemy, eIdx, 'catapult');
                             }
                         }
-                    });
+                    }
                     proj.lifetime = 0;
                 }
                 
