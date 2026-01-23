@@ -111,6 +111,12 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-23**: Enemy behavior improvements
+  - Centralized enemy death handling with handleEnemyDeath function for consistent behavior
+  - Hulk hunters now have proper multi-life system (loses a life, regenerates health, rage flash effect)
+  - Catapult hunters shoot explosive projectiles with AOE damage on ground impact
+  - Hulk hunters use melee-only attacks with knockback effect on player
+  - Enemy movement speeds differentiated by type (hulks faster, catapults slower)
 - **2026-01-23**: Special orb system and new enemy types
   - Added special orb pickups that drop from slain enemies (25% chance)
   - Each character now has both primary (Q key) and special (orb-powered) abilities
