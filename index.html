@@ -177,25 +177,82 @@
 
         #mobile-controls {
             position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
             display: none;
-            gap: 20px;
             z-index: 10;
+            pointer-events: none;
+        }
+
+        #joystick-container {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        #joystick-thumb {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .mobile-action-btns {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            pointer-events: auto;
         }
 
         .mobile-btn {
-            width: 80px;
-            height: 80px;
-            background: rgba(255,255,255,0.3);
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.25);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
+            font-weight: bold;
             color: white;
             user-select: none;
+            border: 2px solid rgba(255,255,255,0.4);
+            touch-action: none;
+        }
+
+        .mobile-btn:active {
+            background: rgba(255,255,255,0.5);
+            transform: scale(0.95);
+        }
+
+        #mobile-jump {
+            background: rgba(100, 200, 255, 0.3);
+            border-color: rgba(100, 200, 255, 0.5);
+        }
+
+        #mobile-attack {
+            background: rgba(255, 100, 100, 0.3);
+            border-color: rgba(255, 100, 100, 0.5);
+            width: 80px;
+            height: 80px;
+            font-size: 12px;
         }
 
         /* Main Menu Styles */
@@ -477,8 +534,13 @@
     <button id="quit-btn">QUIT TO MENU</button>
 
     <div id="mobile-controls">
-        <div class="mobile-btn" id="mobile-jump">JUMP</div>
-        <div class="mobile-btn" id="mobile-attack">ATTACK</div>
+        <div id="joystick-container">
+            <div id="joystick-thumb"></div>
+        </div>
+        <div class="mobile-action-btns">
+            <div class="mobile-btn" id="mobile-jump">JUMP</div>
+            <div class="mobile-btn" id="mobile-attack">ATTACK</div>
+        </div>
     </div>
 
     <div id="crosshair"></div>
@@ -1734,6 +1796,12 @@
             if (keys['d']) {
                 player.velocity.add(right.clone().multiplyScalar(moveSpeed));
             }
+            
+            // Joystick input (mobile)
+            if (joystickState.active) {
+                player.velocity.add(forward.clone().multiplyScalar(-joystickState.y * moveSpeed));
+                player.velocity.add(right.clone().multiplyScalar(joystickState.x * moveSpeed));
+            }
 
             // Double Jump with wing flapping
             if (keys[' '] && player.jumpsUsed < player.maxJumps) {
@@ -2025,6 +2093,7 @@
                     const driveSpeed = 0.15;
                     const turnSpeed = 0.03;
                     
+                    // Keyboard controls
                     if (keys['w']) {
                         vehicle.velocity.x -= Math.sin(vehicle.rotation) * driveSpeed;
                         vehicle.velocity.z -= Math.cos(vehicle.rotation) * driveSpeed;
@@ -2035,6 +2104,20 @@
                     }
                     if (keys['a']) vehicle.rotation += turnSpeed;
                     if (keys['d']) vehicle.rotation -= turnSpeed;
+                    
+                    // Joystick controls (mobile)
+                    if (joystickState.active) {
+                        if (joystickState.y < -0.2) {
+                            vehicle.velocity.x -= Math.sin(vehicle.rotation) * driveSpeed * Math.abs(joystickState.y);
+                            vehicle.velocity.z -= Math.cos(vehicle.rotation) * driveSpeed * Math.abs(joystickState.y);
+                        }
+                        if (joystickState.y > 0.2) {
+                            vehicle.velocity.x += Math.sin(vehicle.rotation) * driveSpeed * 0.5 * joystickState.y;
+                            vehicle.velocity.z += Math.cos(vehicle.rotation) * driveSpeed * 0.5 * joystickState.y;
+                        }
+                        if (joystickState.x < -0.2) vehicle.rotation += turnSpeed * Math.abs(joystickState.x);
+                        if (joystickState.x > 0.2) vehicle.rotation -= turnSpeed * joystickState.x;
+                    }
                     
                     vehicle.position.add(vehicle.velocity);
                     vehicle.velocity.multiplyScalar(0.92);
@@ -2540,6 +2623,63 @@
         }
 
         // ==================== EVENT LISTENERS ====================
+        // Joystick logic
+        const joystickState = { active: false, x: 0, y: 0 };
+        const joystickContainer = document.getElementById('joystick-container');
+        const joystickThumb = document.getElementById('joystick-thumb');
+        
+        function updateJoystick(touch) {
+            const rect = joystickContainer.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const maxDist = rect.width / 2 - 25;
+            
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > maxDist) {
+                dx = (dx / dist) * maxDist;
+                dy = (dy / dist) * maxDist;
+            }
+            
+            joystickThumb.style.left = `calc(50% + ${dx}px)`;
+            joystickThumb.style.top = `calc(50% + ${dy}px)`;
+            
+            joystickState.x = dx / maxDist;
+            joystickState.y = dy / maxDist;
+        }
+        
+        function resetJoystick() {
+            joystickState.active = false;
+            joystickState.x = 0;
+            joystickState.y = 0;
+            joystickThumb.style.left = '50%';
+            joystickThumb.style.top = '50%';
+        }
+        
+        joystickContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            joystickState.active = true;
+            updateJoystick(e.touches[0]);
+        });
+        
+        joystickContainer.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (joystickState.active) {
+                updateJoystick(e.touches[0]);
+            }
+        });
+        
+        joystickContainer.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            resetJoystick();
+        });
+        
+        joystickContainer.addEventListener('touchcancel', (e) => {
+            resetJoystick();
+        });
+
         // Mobile button logic
         document.getElementById('mobile-jump').addEventListener('touchstart', (e) => {
             e.preventDefault();

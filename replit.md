@@ -73,7 +73,7 @@ The game features a full menu system:
 - Score and lives tracking
 - Progressive difficulty with Easy/Normal/Hard modes
 - Gore effects and blood particles
-- Mobile controls support (selectable in settings)
+- Mobile controls with virtual joystick for movement and action buttons
 
 ## Technology Stack
 - **Three.js** (r128) - 3D graphics rendering
