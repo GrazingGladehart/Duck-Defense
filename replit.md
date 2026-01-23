@@ -7,6 +7,12 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 - `index.html` - Single-file game containing HTML, CSS, and JavaScript
 - Simple static site served via Python HTTP server
 
+## Main Menu
+The game features a full menu system:
+- **PLAY GAME** - Start a new game with selected difficulty
+- **SETTINGS** - Adjust difficulty (Easy/Normal/Hard) and input method (Computer/Mobile)
+- **STATISTICS** - View your gameplay stats and score history graph
+
 ## How to Play
 - **W/A/S/D** - Move forward/left/back/right
 - **MOUSE** - Aim direction  
@@ -48,6 +54,15 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 - Drive with W/A/S/D, run over enemies for kills
 - Press E to enter/exit vehicles
 
+### Statistics Tracking
+- **Score History Graph** - Visual display of your scores over time
+- **High Score & Average Score** - Track your best and typical performance
+- **Total Hunters Killed** - Lifetime kill count
+- **Time in Vehicles** - How long you've spent driving trucks
+- **Favorite Weapon** - Your most-used weapon based on kills
+- **Games Played** - Total number of games
+- All stats persist across browser sessions using localStorage
+
 ### Advanced Mechanics
 - Enemy AI hunters that shoot at the player
 - Projectile collision with trees and hut (both player and enemy projectiles blocked)
@@ -56,9 +71,9 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 - Improved projectile accuracy with larger hit detection
 - Weapon pickup system
 - Score and lives tracking
-- Progressive difficulty
+- Progressive difficulty with Easy/Normal/Hard modes
 - Gore effects and blood particles
-- Mobile controls support (toggle in settings)
+- Mobile controls support (selectable in settings)
 
 ## Technology Stack
 - **Three.js** (r128) - 3D graphics rendering
@@ -69,6 +84,13 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-23**: Menu system and stats tracking
+  - Created dedicated main menu with PLAY/SETTINGS/STATISTICS options
+  - Added settings page with difficulty selection (Easy/Normal/Hard)
+  - Added input method selection (Computer/Mobile)
+  - Implemented comprehensive statistics page with score history graph
+  - Stats include: high score, average score, total kills, time played, vehicle time, favorite weapon
+  - All settings and stats persist to localStorage
 - **2026-01-23**: Vehicles and combat improvements
   - Added pilotable hunter trucks that spawn with armed drivers
   - Players can hijack vehicles after killing the driver

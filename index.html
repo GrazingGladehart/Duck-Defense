@@ -175,92 +175,6 @@
             background: rgba(180, 20, 60, 0.9);
         }
 
-        #settings-menu {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            padding: 30px;
-            border-radius: 15px;
-            color: white;
-            text-align: center;
-            display: none;
-            z-index: 30;
-            min-width: 300px;
-        }
-
-        #settings-menu h2 {
-            color: #FFD700;
-            margin-bottom: 20px;
-        }
-
-        .settings-option {
-            margin: 15px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 18px;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        #settings-btn {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: 1px solid white;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 15;
-        }
-
         #mobile-controls {
             position: absolute;
             bottom: 40px;
@@ -283,6 +197,270 @@
             color: white;
             user-select: none;
         }
+
+        /* Main Menu Styles */
+        #main-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a3a2a 0%, #0d1f15 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .menu-title {
+            font-size: 64px;
+            color: #FFD700;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+            margin-bottom: 10px;
+        }
+
+        .menu-subtitle {
+            font-size: 20px;
+            color: #8FBC8F;
+            margin-bottom: 40px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            padding: 18px 60px;
+            font-size: 22px;
+            background: linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            border: 3px solid #66BB6A;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            min-width: 280px;
+        }
+
+        .menu-btn:hover {
+            background: linear-gradient(180deg, #66BB6A 0%, #388E3C 100%);
+            transform: scale(1.05);
+        }
+
+        .menu-btn.secondary {
+            background: linear-gradient(180deg, #455A64 0%, #263238 100%);
+            border-color: #607D8B;
+        }
+
+        .menu-btn.secondary:hover {
+            background: linear-gradient(180deg, #607D8B 0%, #37474F 100%);
+        }
+
+        /* Settings Page */
+        #settings-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a3a2a 0%, #0d1f15 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .settings-panel {
+            background: rgba(0,0,0,0.7);
+            padding: 40px;
+            border-radius: 20px;
+            min-width: 400px;
+        }
+
+        .settings-panel h2 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 36px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .setting-label {
+            font-size: 18px;
+            color: white;
+        }
+
+        .setting-select {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .difficulty-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .diff-btn {
+            padding: 10px 20px;
+            border: 2px solid #666;
+            background: transparent;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .diff-btn.active {
+            background: #4CAF50;
+            border-color: #66BB6A;
+        }
+
+        .diff-btn:hover {
+            border-color: #4CAF50;
+        }
+
+        .input-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-btn {
+            padding: 10px 20px;
+            border: 2px solid #666;
+            background: transparent;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .input-btn.active {
+            background: #2196F3;
+            border-color: #42A5F5;
+        }
+
+        .input-btn:hover {
+            border-color: #2196F3;
+        }
+
+        /* Stats Page */
+        #stats-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a3a2a 0%, #0d1f15 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 100;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .stats-container {
+            background: rgba(0,0,0,0.7);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .stats-container h2 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 36px;
+        }
+
+        .stats-graph {
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stats-graph h3 {
+            color: #8FBC8F;
+            margin-bottom: 15px;
+        }
+
+        #score-graph {
+            width: 100%;
+            height: 200px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 36px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .stat-card .stat-label {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .stat-card.highlight .stat-value {
+            color: #FFD700;
+        }
+
+        .back-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #455A64;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #607D8B;
+        }
+
+        .no-stats {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -296,20 +474,7 @@
         Weapon: <span id="current-weapon">Fists</span>
     </div>
 
-    <button id="settings-btn">SETTINGS</button>
     <button id="quit-btn">QUIT TO MENU</button>
-
-    <div id="settings-menu">
-        <h2>Settings</h2>
-        <div class="settings-option">
-            <span>Mobile Controls</span>
-            <label class="toggle-switch">
-                <input type="checkbox" id="mobile-toggle">
-                <span class="slider"></span>
-            </label>
-        </div>
-        <button id="close-settings" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">CLOSE</button>
-    </div>
 
     <div id="mobile-controls">
         <div class="mobile-btn" id="mobile-jump">JUMP</div>
@@ -318,18 +483,53 @@
 
     <div id="crosshair"></div>
 
-    <div id="instructions">
-        <h2>🦆 Duck Defense 3D 🦆</h2>
-        <ul>
-            <li><strong>W/A/S/D</strong> - Move forward/left/back/right</li>
-            <li><strong>MOUSE</strong> - Aim direction</li>
-            <li><strong>SPACE</strong> - Jump (Double Jump!)</li>
-            <li><strong>LEFT CLICK</strong> - Attack/Shoot</li>
-            <li><strong>E</strong> - Enter/Exit vehicles</li>
-            <li><strong>Collect weapons</strong> to fight hunters!</li>
-            <li><strong>Survive as long as you can!</strong></li>
-        </ul>
-        <button id="start-btn">START GAME</button>
+    <!-- Main Menu -->
+    <div id="main-menu">
+        <div class="menu-title">Duck Defense 3D</div>
+        <div class="menu-subtitle">Survive the hunter invasion!</div>
+        <div class="menu-buttons">
+            <button class="menu-btn" id="play-btn">PLAY GAME</button>
+            <button class="menu-btn secondary" id="settings-menu-btn">SETTINGS</button>
+            <button class="menu-btn secondary" id="stats-btn">STATISTICS</button>
+        </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="settings-page">
+        <div class="settings-panel">
+            <h2>Settings</h2>
+            <div class="setting-row">
+                <span class="setting-label">Difficulty</span>
+                <div class="difficulty-btns">
+                    <button class="diff-btn" data-diff="easy">Easy</button>
+                    <button class="diff-btn active" data-diff="normal">Normal</button>
+                    <button class="diff-btn" data-diff="hard">Hard</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Input Method</span>
+                <div class="input-btns">
+                    <button class="input-btn active" data-input="computer">Computer</button>
+                    <button class="input-btn" data-input="mobile">Mobile</button>
+                </div>
+            </div>
+            <button class="back-btn" id="settings-back-btn">BACK TO MENU</button>
+        </div>
+    </div>
+
+    <!-- Stats Page -->
+    <div id="stats-page">
+        <div class="stats-container">
+            <h2>Your Statistics</h2>
+            <div class="stats-graph">
+                <h3>Score History</h3>
+                <canvas id="score-graph"></canvas>
+            </div>
+            <div class="stats-grid" id="stats-grid">
+                <!-- Stats will be populated dynamically -->
+            </div>
+            <button class="back-btn" id="stats-back-btn">BACK TO MENU</button>
+        </div>
     </div>
 
     <div id="game-over">
@@ -341,6 +541,90 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <script>
+        // ==================== GAME SETTINGS (persisted) ====================
+        const defaultSettings = {
+            difficulty: 'normal',
+            inputMethod: 'computer'
+        };
+        
+        function loadSettings() {
+            const saved = localStorage.getItem('duckDefenseSettings');
+            return saved ? JSON.parse(saved) : { ...defaultSettings };
+        }
+        
+        function saveSettings() {
+            localStorage.setItem('duckDefenseSettings', JSON.stringify(gameSettings));
+        }
+        
+        const gameSettings = loadSettings();
+        
+        // Difficulty multipliers
+        const difficultyConfig = {
+            easy: { spawnRate: 4000, enemyHealth: 0.7, enemyDamage: 0.5, enemySpeed: 0.7 },
+            normal: { spawnRate: 3000, enemyHealth: 1.0, enemyDamage: 1.0, enemySpeed: 1.0 },
+            hard: { spawnRate: 2000, enemyHealth: 1.5, enemyDamage: 1.5, enemySpeed: 1.3 }
+        };
+
+        // ==================== STATS SYSTEM ====================
+        function loadAllStats() {
+            const saved = localStorage.getItem('duckDefenseStats');
+            return saved ? JSON.parse(saved) : { games: [], totalKills: 0, totalTime: 0, totalVehicleTime: 0, weaponKills: {} };
+        }
+        
+        function saveAllStats() {
+            localStorage.setItem('duckDefenseStats', JSON.stringify(allTimeStats));
+        }
+        
+        const allTimeStats = loadAllStats();
+        
+        // Current session stats
+        const sessionStats = {
+            kills: 0,
+            timeAlive: 0,
+            vehicleTime: 0,
+            vehicleKills: 0,
+            weaponKills: {},
+            weaponsUsed: new Set()
+        };
+        
+        function resetSessionStats() {
+            sessionStats.kills = 0;
+            sessionStats.timeAlive = 0;
+            sessionStats.vehicleTime = 0;
+            sessionStats.vehicleKills = 0;
+            sessionStats.weaponKills = {};
+            sessionStats.weaponsUsed = new Set();
+        }
+        
+        function trackKill(weaponOrType) {
+            sessionStats.kills++;
+            sessionStats.weaponKills[weaponOrType] = (sessionStats.weaponKills[weaponOrType] || 0) + 1;
+            sessionStats.weaponsUsed.add(weaponOrType);
+        }
+        
+        function recordGameEnd(score, timeAlive) {
+            allTimeStats.games.push({
+                score: score,
+                time: timeAlive,
+                date: Date.now(),
+                difficulty: gameSettings.difficulty
+            });
+            allTimeStats.totalKills += sessionStats.kills;
+            allTimeStats.totalTime += timeAlive;
+            allTimeStats.totalVehicleTime += sessionStats.vehicleTime;
+            
+            for (const [weapon, kills] of Object.entries(sessionStats.weaponKills)) {
+                allTimeStats.weaponKills[weapon] = (allTimeStats.weaponKills[weapon] || 0) + kills;
+            }
+            
+            // Keep only last 50 games for graph
+            if (allTimeStats.games.length > 50) {
+                allTimeStats.games = allTimeStats.games.slice(-50);
+            }
+            
+            saveAllStats();
+        }
+
         // ==================== GAME STATE ====================
         const gameState = {
             kills: 0,
@@ -1661,7 +1945,8 @@
                             }
                             scene.remove(enemy.mesh);
                             enemies.splice(idx, 1);
-                            gameState.kills ++;
+                            gameState.kills++;
+                            trackKill(gameState.currentWeapon);
                             updateUI();
                         }
                     }
@@ -1776,9 +2061,14 @@
                             scene.remove(enemy.mesh);
                             enemies.splice(idx, 1);
                             gameState.kills++;
+                            trackKill('vehicle');
+                            sessionStats.vehicleKills++;
                             updateUI();
                         }
                     });
+                    
+                    // Track vehicle time
+                    sessionStats.vehicleTime += delta / 1000;
                     
                     // Exit vehicle with E
                     if (keys['e'] && !vehicle.exitCooldown) {
@@ -1917,6 +2207,7 @@
             scene.remove(enemy.mesh);
             enemies.splice(idx, 1);
             gameState.kills++;
+            trackKill(proj.weaponType || 'projectile');
             updateUI();
             }
 
@@ -1985,6 +2276,7 @@
                                 scene.remove(enemy.mesh);
                                 enemies.splice(idx, 1);
                                 gameState.kills++;
+                                trackKill(proj.weaponType || gameState.currentWeapon);
                                 updateUI();
                             }
                             
@@ -2017,6 +2309,7 @@
                                     vehicle.mesh.remove(vehicle.driver.mesh);
                                     vehicle.hasDriver = false;
                                     gameState.kills++;
+                                    trackKill(proj.weaponType || gameState.currentWeapon);
                                     updateUI();
                                 }
                                 
@@ -2077,6 +2370,7 @@
                                 scene.remove(enemy.mesh);
                                 enemies.splice(idx, 1);
                                 gameState.kills++;
+                                trackKill('catapult');
                                 updateUI();
                             }
                         }
@@ -2165,8 +2459,13 @@
 
         function gameOver() {
             gameState.isGameOver = true;
-            document.getElementById('final-score').textContent = gameState.kills*100+gameState.gameTime;
+            const finalScore = gameState.kills * 100 + Math.floor(gameState.gameTime);
+            document.getElementById('final-score').textContent = finalScore;
             document.getElementById('game-over').style.display = 'block';
+            
+            // Record stats
+            sessionStats.timeAlive = Math.floor(gameState.gameTime);
+            recordGameEnd(finalScore, sessionStats.timeAlive);
         }
 
         function resetGame() {
@@ -2241,29 +2540,6 @@
         }
 
         // ==================== EVENT LISTENERS ====================
-        const settingsBtn = document.getElementById('settings-btn');
-        const settingsMenu = document.getElementById('settings-menu');
-        const mobileToggle = document.getElementById('mobile-toggle');
-        const mobileControls = document.getElementById('mobile-controls');
-        const closeSettings = document.getElementById('close-settings');
-
-        settingsBtn.addEventListener('click', () => {
-            settingsMenu.style.display = 'block';
-            gameState.isPaused = true;
-        });
-
-        closeSettings.addEventListener('click', () => {
-            settingsMenu.style.display = 'none';
-            if (!document.getElementById('instructions').style.display || 
-                document.getElementById('instructions').style.display === 'none') {
-                gameState.isPaused = false;
-            }
-        });
-
-        mobileToggle.addEventListener('change', (e) => {
-            mobileControls.style.display = e.target.checked ? 'flex' : 'none';
-        });
-
         // Mobile button logic
         document.getElementById('mobile-jump').addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -2286,23 +2562,246 @@
             }
         });
 
-        document.getElementById('start-btn').addEventListener('click', () => {
-            document.getElementById('instructions').style.display = 'none';
+        // ==================== MENU NAVIGATION ====================
+        function showMenu() {
+            document.getElementById('main-menu').style.display = 'flex';
+            document.getElementById('settings-page').style.display = 'none';
+            document.getElementById('stats-page').style.display = 'none';
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('quit-btn').style.display = 'none';
+        }
+        
+        function hideAllMenus() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('settings-page').style.display = 'none';
+            document.getElementById('stats-page').style.display = 'none';
+        }
+        
+        function startGame() {
+            hideAllMenus();
+            resetSessionStats();
             document.getElementById('quit-btn').style.display = 'block';
+            
+            // Apply difficulty settings
+            const diff = difficultyConfig[gameSettings.difficulty];
+            gameState.enemySpawnRate = diff.spawnRate;
+            
+            // Apply input method
+            if (gameSettings.inputMethod === 'mobile') {
+                document.getElementById('mobile-controls').style.display = 'flex';
+            } else {
+                document.getElementById('mobile-controls').style.display = 'none';
+            }
+            
             gameState.isPaused = false;
             gameState.gameStartTime = Date.now();
             gameState.lastSpawnTime = Date.now();
             lastTruckSpawnTime = Date.now();
+        }
+        
+        // Draw score graph
+        function drawScoreGraph() {
+            const canvas = document.getElementById('score-graph');
+            const ctx = canvas.getContext('2d');
+            const games = allTimeStats.games;
+            
+            // Set canvas size
+            canvas.width = canvas.parentElement.clientWidth - 40;
+            canvas.height = 200;
+            
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (games.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No games played yet!', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            const padding = 40;
+            const graphWidth = canvas.width - padding * 2;
+            const graphHeight = canvas.height - padding * 2;
+            
+            const maxScore = Math.max(...games.map(g => g.score), 100);
+            
+            // Draw axes
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.stroke();
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#333';
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (graphHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(canvas.width - padding, y);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#666';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(Math.round(maxScore - (maxScore / 4) * i), padding - 5, y + 3);
+            }
+            
+            // Draw line graph
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            games.forEach((game, i) => {
+                const x = padding + (graphWidth / Math.max(games.length - 1, 1)) * i;
+                const y = canvas.height - padding - (game.score / maxScore) * graphHeight;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // Draw points
+            ctx.fillStyle = '#66BB6A';
+            games.forEach((game, i) => {
+                const x = padding + (graphWidth / Math.max(games.length - 1, 1)) * i;
+                const y = canvas.height - padding - (game.score / maxScore) * graphHeight;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        function populateStats() {
+            const grid = document.getElementById('stats-grid');
+            const stats = allTimeStats;
+            const games = stats.games;
+            
+            if (games.length === 0) {
+                grid.innerHTML = '<div class="no-stats">Play some games to see your statistics!</div>';
+                return;
+            }
+            
+            const highScore = Math.max(...games.map(g => g.score));
+            const avgScore = Math.round(games.reduce((sum, g) => sum + g.score, 0) / games.length);
+            const totalGames = games.length;
+            const totalTime = Math.floor(stats.totalTime);
+            const vehicleTime = Math.floor(stats.totalVehicleTime);
+            
+            // Find favorite weapon
+            let favoriteWeapon = 'None';
+            let maxKills = 0;
+            for (const [weapon, kills] of Object.entries(stats.weaponKills)) {
+                if (kills > maxKills) {
+                    maxKills = kills;
+                    favoriteWeapon = weapon.charAt(0).toUpperCase() + weapon.slice(1);
+                }
+            }
+            
+            grid.innerHTML = `
+                <div class="stat-card highlight">
+                    <div class="stat-value">${highScore}</div>
+                    <div class="stat-label">High Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${avgScore}</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalKills}</div>
+                    <div class="stat-label">Total Hunters Killed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalGames}</div>
+                    <div class="stat-label">Games Played</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.floor(totalTime / 60)}m ${totalTime % 60}s</div>
+                    <div class="stat-label">Total Time Played</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.floor(vehicleTime / 60)}m ${vehicleTime % 60}s</div>
+                    <div class="stat-label">Time in Vehicles</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">${favoriteWeapon}</div>
+                    <div class="stat-label">Favorite Weapon</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.round(totalTime / Math.max(totalGames, 1))}s</div>
+                    <div class="stat-label">Avg Survival Time</div>
+                </div>
+            `;
+        }
+        
+        // Initialize settings UI
+        function initSettingsUI() {
+            // Set active difficulty button
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.diff === gameSettings.difficulty);
+            });
+            
+            // Set active input button
+            document.querySelectorAll('.input-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.input === gameSettings.inputMethod);
+            });
+        }
+        
+        // Menu button handlers
+        document.getElementById('play-btn').addEventListener('click', () => {
+            resetGame();
+            startGame();
+        });
+        
+        document.getElementById('settings-menu-btn').addEventListener('click', () => {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('settings-page').style.display = 'flex';
+            initSettingsUI();
+        });
+        
+        document.getElementById('stats-btn').addEventListener('click', () => {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('stats-page').style.display = 'flex';
+            populateStats();
+            setTimeout(drawScoreGraph, 50);
+        });
+        
+        document.getElementById('settings-back-btn').addEventListener('click', showMenu);
+        document.getElementById('stats-back-btn').addEventListener('click', showMenu);
+        
+        // Difficulty buttons
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameSettings.difficulty = btn.dataset.diff;
+                saveSettings();
+            });
+        });
+        
+        // Input method buttons
+        document.querySelectorAll('.input-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.input-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameSettings.inputMethod = btn.dataset.input;
+                saveSettings();
+            });
         });
 
         document.getElementById('restart-btn').addEventListener('click', () => {
             resetGame();
+            startGame();
         });
 
         document.getElementById('quit-btn').addEventListener('click', () => {
             gameState.isPaused = true;
-            document.getElementById('quit-btn').style.display = 'none';
-            document.getElementById('instructions').style.display = 'block';
             
             // Reset game state without showing game over
             gameState.kills = 0;
@@ -2344,6 +2843,7 @@
             windStreaks.length = 0;
             
             updateUI();
+            showMenu();
         });
 
         window.addEventListener('resize', () => {
