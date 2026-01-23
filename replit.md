@@ -9,8 +9,8 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 
 ## Main Menu
 The game features a full menu system:
-- **PLAY GAME** - Start a new game with selected difficulty
-- **SETTINGS** - Adjust difficulty (Easy/Normal/Hard) and input method (Computer/Mobile)
+- **PLAY GAME** - Start a new game with selected difficulty and character
+- **SETTINGS** - Adjust difficulty, input method, and select your character
 - **STATISTICS** - View your gameplay stats and score history graph
 
 ## How to Play
@@ -18,6 +18,7 @@ The game features a full menu system:
 - **MOUSE** - Aim direction  
 - **SPACE** - Jump (press twice for double jump with wing flapping!)
 - **LEFT CLICK** - Attack/Shoot
+- **Q** - Activate special ability (character-specific)
 - **E** - Enter/Exit vehicles
 - **Collect weapons** to increase firepower against hunters
 - **Steal hunter trucks** after eliminating the driver
@@ -75,6 +76,14 @@ The game features a full menu system:
 - Gore effects and blood particles
 - Mobile controls with virtual joystick for movement and action buttons
 
+### Playable Characters
+Each character has unique colors, features, and a special ability (activated with Q key):
+
+- **Duck** (Classic yellow) - No special ability, balanced gameplay
+- **Titan Turkey** (Brown/red with wattle) - Helmet Charge: Puts on football helmet, doubles movement speed, rams through enemies for 10 seconds. 15s cooldown.
+- **Kung Pow Chicken** (White with red headband) - Martial Arts: 5 seconds of combo attacks with increasing damage and range. 8s cooldown.
+- **Merica Mallard** (Patriotic blue with Uncle Sam hat) - Eagle Strike: Instant AOE attack that damages all enemies within 8 units. 12s cooldown.
+
 ## Technology Stack
 - **Three.js** (r128) - 3D graphics rendering
 - **Vanilla JavaScript** - Game logic
@@ -84,6 +93,12 @@ The game features a full menu system:
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-23**: Character selection system
+  - Added 4 playable characters: Duck, Titan Turkey, Kung Pow Chicken, Merica Mallard
+  - Each character has unique visual design and colors
+  - Character-specific special abilities activated with Q key
+  - Ability cooldown and duration system with UI indicators
+  - Character selection persists to localStorage
 - **2026-01-23**: Menu system and stats tracking
   - Created dedicated main menu with PLAY/SETTINGS/STATISTICS options
   - Added settings page with difficulty selection (Easy/Normal/Hard)

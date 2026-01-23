@@ -418,6 +418,82 @@
             border-color: #2196F3;
         }
 
+        .character-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .char-btn {
+            padding: 10px 15px;
+            border: 2px solid #666;
+            background: transparent;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .char-btn.active {
+            background: #FF6B00;
+            border-color: #FF8C00;
+        }
+
+        .char-btn:hover {
+            border-color: #FF6B00;
+        }
+
+        .char-description {
+            font-size: 12px;
+            color: #aaa;
+            font-style: italic;
+        }
+
+        #ability-bar {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+            z-index: 10;
+        }
+
+        #ability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B00, #FFD700);
+            width: 100%;
+            transition: width 0.1s;
+        }
+
+        #ability-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            line-height: 20px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #ability-prompt {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFD700;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px black;
+            display: none;
+            z-index: 10;
+        }
+
         /* Stats Page */
         #stats-page {
             position: absolute;
@@ -532,6 +608,12 @@
     </div>
 
     <button id="quit-btn">QUIT TO MENU</button>
+    
+    <div id="ability-bar">
+        <div id="ability-fill"></div>
+        <div id="ability-text">ABILITY READY - Press Q</div>
+    </div>
+    <div id="ability-prompt">Press Q for Special Ability!</div>
 
     <div id="mobile-controls">
         <div id="joystick-container">
@@ -575,6 +657,16 @@
                     <button class="input-btn" data-input="mobile">Mobile</button>
                 </div>
             </div>
+            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <span class="setting-label" style="margin-bottom: 10px;">Character</span>
+                <div class="character-btns">
+                    <button class="char-btn active" data-char="duck">Duck</button>
+                    <button class="char-btn" data-char="titanTurkey">Titan Turkey</button>
+                    <button class="char-btn" data-char="kungPowChicken">Kung Pow Chicken</button>
+                    <button class="char-btn" data-char="mericaMallard">Merica Mallard</button>
+                </div>
+                <div class="char-description" id="char-description">Classic yellow duck - balanced gameplay</div>
+            </div>
             <button class="back-btn" id="settings-back-btn">BACK TO MENU</button>
         </div>
     </div>
@@ -606,7 +698,43 @@
         // ==================== GAME SETTINGS (persisted) ====================
         const defaultSettings = {
             difficulty: 'normal',
-            inputMethod: 'computer'
+            inputMethod: 'computer',
+            character: 'duck'
+        };
+        
+        // Character configurations
+        const characterConfig = {
+            duck: {
+                name: 'Duck',
+                description: 'Classic yellow duck - balanced gameplay',
+                colors: { body: 0xFFFF00, head: 0xFFFF00, beak: 0xFFA500, wing: 0xFFDD00 },
+                ability: null,
+                abilityCooldown: 0
+            },
+            titanTurkey: {
+                name: 'Titan Turkey',
+                description: 'Football helmet charge - ram through enemies!',
+                colors: { body: 0x8B4513, head: 0xCC3333, beak: 0xFFAA00, wing: 0x6B3513 },
+                ability: 'helmetCharge',
+                abilityCooldown: 15000,
+                abilityDuration: 10000
+            },
+            kungPowChicken: {
+                name: 'Kung Pow Chicken',
+                description: 'Martial arts master - devastating combo attacks!',
+                colors: { body: 0xFFFFFF, head: 0xFFFFFF, beak: 0xFFCC00, wing: 0xEEEEEE },
+                ability: 'martialArts',
+                abilityCooldown: 8000,
+                abilityDuration: 5000
+            },
+            mericaMallard: {
+                name: 'Merica Mallard',
+                description: 'Patriotic power - eagle strike from above!',
+                colors: { body: 0x002868, head: 0x002868, beak: 0xBF0A30, wing: 0xFFFFFF },
+                ability: 'eagleStrike',
+                abilityCooldown: 12000,
+                abilityDuration: 0
+            }
         };
         
         function loadSettings() {
@@ -1063,30 +1191,37 @@
 
         // ==================== DUCK PLAYER ====================
         function createDuck() {
-            const duck = new THREE.Group();
+            return createCharacter('duck');
+        }
+        
+        function createCharacter(charType) {
+            const config = characterConfig[charType] || characterConfig.duck;
+            const bird = new THREE.Group();
+            bird.userData.charType = charType;
             
             const bodyGeom = new THREE.SphereGeometry(0.6, 8, 8);
-            const bodyMat = new THREE.MeshLambertMaterial({ color: 0xFFFF00 });
+            const bodyMat = new THREE.MeshLambertMaterial({ color: config.colors.body });
             const body = new THREE.Mesh(bodyGeom, bodyMat);
             body.scale.y = 1.2;
             body.castShadow = true;
-            duck.add(body);
-            duck.userData.body = body;
+            bird.add(body);
+            bird.userData.body = body;
             
             const headGeom = new THREE.SphereGeometry(0.4, 8, 8);
-            const head = new THREE.Mesh(headGeom, bodyMat);
+            const headMat = new THREE.MeshLambertMaterial({ color: config.colors.head });
+            const head = new THREE.Mesh(headGeom, headMat);
             head.position.y = 0.8;
             head.castShadow = true;
-            duck.add(head);
-            duck.userData.head = head;
+            bird.add(head);
+            bird.userData.head = head;
             
             const beakGeom = new THREE.ConeGeometry(0.15, 0.3, 4);
-            const beakMat = new THREE.MeshLambertMaterial({ color: 0xFFA500 });
+            const beakMat = new THREE.MeshLambertMaterial({ color: config.colors.beak });
             const beak = new THREE.Mesh(beakGeom, beakMat);
             beak.rotation.x = Math.PI / 2;
             beak.position.set(0, 0.8, 0.4);
             beak.castShadow = true;
-            duck.add(beak);
+            bird.add(beak);
             
             const eyeGeom = new THREE.SphereGeometry(0.08, 6, 6);
             const eyeMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
@@ -1094,26 +1229,99 @@
             leftEye.position.set(-0.15, 0.9, 0.3);
             const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
             rightEye.position.set(0.15, 0.9, 0.3);
-            duck.add(leftEye, rightEye);
+            bird.add(leftEye, rightEye);
             
             // Wings
             const wingGeom = new THREE.BoxGeometry(0.8, 0.1, 0.5);
-            const wingMat = new THREE.MeshLambertMaterial({ color: 0xFFDD00 });
+            const wingMat = new THREE.MeshLambertMaterial({ color: config.colors.wing });
             const leftWing = new THREE.Mesh(wingGeom, wingMat);
             leftWing.position.set(-0.5, 0.2, 0);
             leftWing.rotation.z = -Math.PI / 6;
             leftWing.castShadow = true;
-            duck.add(leftWing);
-            duck.userData.leftWing = leftWing;
+            bird.add(leftWing);
+            bird.userData.leftWing = leftWing;
             
             const rightWing = new THREE.Mesh(wingGeom, wingMat);
             rightWing.position.set(0.5, 0.2, 0);
             rightWing.rotation.z = Math.PI / 6;
             rightWing.castShadow = true;
-            duck.add(rightWing);
-            duck.userData.rightWing = rightWing;
+            bird.add(rightWing);
+            bird.userData.rightWing = rightWing;
             
-            return duck;
+            // Character-specific features
+            if (charType === 'titanTurkey') {
+                // Turkey wattle
+                const wattleGeom = new THREE.SphereGeometry(0.15, 6, 6);
+                const wattleMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+                const wattle = new THREE.Mesh(wattleGeom, wattleMat);
+                wattle.scale.y = 1.5;
+                wattle.position.set(0, 0.6, 0.35);
+                bird.add(wattle);
+                
+                // Football helmet (hidden until ability active)
+                const helmetGeom = new THREE.SphereGeometry(0.45, 8, 8);
+                const helmetMat = new THREE.MeshLambertMaterial({ color: 0x1E90FF });
+                const helmet = new THREE.Mesh(helmetGeom, helmetMat);
+                helmet.position.y = 0.85;
+                helmet.scale.set(1.1, 0.9, 1.1);
+                helmet.visible = false;
+                bird.add(helmet);
+                bird.userData.helmet = helmet;
+                
+                // Facemask
+                const maskGeom = new THREE.TorusGeometry(0.2, 0.02, 4, 8);
+                const maskMat = new THREE.MeshLambertMaterial({ color: 0xCCCCCC });
+                const mask = new THREE.Mesh(maskGeom, maskMat);
+                mask.position.set(0, 0.85, 0.4);
+                mask.rotation.x = Math.PI / 2;
+                mask.visible = false;
+                bird.add(mask);
+                bird.userData.facemask = mask;
+            }
+            
+            if (charType === 'kungPowChicken') {
+                // Headband
+                const bandGeom = new THREE.TorusGeometry(0.38, 0.03, 4, 16);
+                const bandMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+                const band = new THREE.Mesh(bandGeom, bandMat);
+                band.position.y = 0.95;
+                band.rotation.x = Math.PI / 2;
+                bird.add(band);
+                
+                // Tail ribbons
+                const ribbonGeom = new THREE.BoxGeometry(0.05, 0.3, 0.02);
+                const ribbon1 = new THREE.Mesh(ribbonGeom, bandMat);
+                ribbon1.position.set(-0.3, 0.85, -0.2);
+                ribbon1.rotation.z = 0.3;
+                const ribbon2 = new THREE.Mesh(ribbonGeom, bandMat);
+                ribbon2.position.set(-0.35, 0.75, -0.2);
+                ribbon2.rotation.z = 0.5;
+                bird.add(ribbon1, ribbon2);
+            }
+            
+            if (charType === 'mericaMallard') {
+                // Uncle Sam hat
+                const hatBaseGeom = new THREE.CylinderGeometry(0.35, 0.35, 0.05, 16);
+                const hatBaseMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                const hatBase = new THREE.Mesh(hatBaseGeom, hatBaseMat);
+                hatBase.position.y = 1.15;
+                bird.add(hatBase);
+                
+                const hatTopGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.4, 16);
+                const hatTopMat = new THREE.MeshLambertMaterial({ color: 0xBF0A30 });
+                const hatTop = new THREE.Mesh(hatTopGeom, hatTopMat);
+                hatTop.position.y = 1.35;
+                bird.add(hatTop);
+                
+                // Star on hat
+                const starGeom = new THREE.SphereGeometry(0.08, 4, 4);
+                const starMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                const star = new THREE.Mesh(starGeom, starMat);
+                star.position.set(0, 1.35, 0.25);
+                bird.add(star);
+            }
+            
+            return bird;
         }
 
         function createWeaponModel(weaponType) {
@@ -1263,7 +1471,7 @@
         }
 
         const player = {
-            mesh: createDuck(),
+            mesh: createCharacter(gameSettings.character),
             velocity: new THREE.Vector3(),
             position: new THREE.Vector3(8, 1, 0), // Start outside hut
             lookAngle: 0,
@@ -1274,7 +1482,13 @@
             lastAttackTime: 0,
             weaponModel: null,
             wingFlapTime: 0,
-            bloodDripCounter: 0
+            bloodDripCounter: 0,
+            // Ability system
+            abilityActive: false,
+            abilityEndTime: 0,
+            abilityCooldownEnd: 0,
+            comboCount: 0,
+            lastComboTime: 0
         };
 
         player.mesh.position.copy(player.position);
@@ -1670,7 +1884,13 @@
         const keys = {};
         let mouseDown = false;
 
-        window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            // Q key for ability activation
+            if (e.key.toLowerCase() === 'q' && gameState.playing) {
+                activateAbility();
+            }
+        });
         window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
         window.addEventListener('mousedown', () => mouseDown = true);
         window.addEventListener('mouseup', () => mouseDown = false);
@@ -1769,9 +1989,14 @@
         function updatePlayer(delta) {
             if (gameState.isPaused || gameState.isGameOver) return;
 
-            const baseSpeed = 0.04; // Slower base speed
+            let baseSpeed = 0.04; // Slower base speed
             const jumpForce = 1.25; // Increased jump force
             const gravity = -0.04;
+            
+            // Titan Turkey speed boost when ability active
+            if (gameSettings.character === 'titanTurkey' && player.abilityActive) {
+                baseSpeed = 0.08; // Double speed during charge!
+            }
 
             // Get speed modifier based on terrain
             const speedModifier = getSpeedModifier(player.position);
@@ -1943,13 +2168,207 @@
             }
         }
 
+        // ==================== ABILITY SYSTEM ====================
+        function activateAbility() {
+            const charType = gameSettings.character;
+            const config = characterConfig[charType];
+            if (!config.ability) return;
+            
+            const now = Date.now();
+            if (now < player.abilityCooldownEnd) return;
+            if (player.abilityActive) return;
+            
+            player.abilityActive = true;
+            player.abilityEndTime = now + config.abilityDuration;
+            player.abilityCooldownEnd = now + config.abilityCooldown;
+            
+            // Activate character-specific ability
+            if (charType === 'titanTurkey') {
+                // Show helmet
+                if (player.mesh.userData.helmet) {
+                    player.mesh.userData.helmet.visible = true;
+                    player.mesh.userData.facemask.visible = true;
+                }
+            } else if (charType === 'kungPowChicken') {
+                player.comboCount = 0;
+            } else if (charType === 'mericaMallard') {
+                // Eagle strike - instant damage in area
+                executeEagleStrike();
+                player.abilityActive = false;
+            }
+            
+            updateAbilityUI();
+        }
+        
+        function executeEagleStrike() {
+            // Jump up and slam down
+            player.velocity.y = 0.5;
+            
+            // Create eagle effect particles
+            for (let i = 0; i < 20; i++) {
+                const angle = (i / 20) * Math.PI * 2;
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.2),
+                    new THREE.MeshBasicMaterial({ color: 0xFFD700 })
+                );
+                particle.position.copy(player.position);
+                particle.position.x += Math.cos(angle) * 2;
+                particle.position.z += Math.sin(angle) * 2;
+                scene.add(particle);
+                
+                const vel = new THREE.Vector3(Math.cos(angle) * 0.2, 0.1, Math.sin(angle) * 0.2);
+                bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 30 });
+            }
+            
+            // Damage all enemies in range (reverse loop to safely remove)
+            const strikeRadius = 8;
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const dist = player.position.distanceTo(enemy.position);
+                if (dist < strikeRadius) {
+                    enemy.health -= 80;
+                    if (enemy.health <= 0) {
+                        for (let j = 0; j < 20; j++) {
+                            createBloodParticle(enemy.position.clone(), 'large');
+                        }
+                        scene.remove(enemy.mesh);
+                        enemies.splice(i, 1);
+                        gameState.kills++;
+                        trackKill('eagleStrike');
+                        updateUI();
+                    }
+                }
+            }
+        }
+        
+        function updateAbilityState(delta) {
+            const charType = gameSettings.character;
+            const config = characterConfig[charType];
+            const abilityBar = document.getElementById('ability-bar');
+            const abilityPrompt = document.getElementById('ability-prompt');
+            
+            if (!abilityBar || !abilityPrompt) return;
+            if (!gameState.playing) return;
+            
+            if (!config.ability) {
+                abilityBar.style.display = 'none';
+                abilityPrompt.style.display = 'none';
+                return;
+            }
+            
+            const now = Date.now();
+            
+            // Show ability bar for characters with abilities
+            abilityBar.style.display = 'block';
+            
+            if (player.abilityActive && now >= player.abilityEndTime) {
+                // Ability ended
+                player.abilityActive = false;
+                if (charType === 'titanTurkey') {
+                    if (player.mesh.userData.helmet) {
+                        player.mesh.userData.helmet.visible = false;
+                        player.mesh.userData.facemask.visible = false;
+                    }
+                }
+            }
+            
+            updateAbilityUI();
+        }
+        
+        function updateAbilityUI() {
+            const charType = gameSettings.character;
+            const config = characterConfig[charType];
+            if (!config.ability) return;
+            
+            const now = Date.now();
+            const fill = document.getElementById('ability-fill');
+            const text = document.getElementById('ability-text');
+            const prompt = document.getElementById('ability-prompt');
+            
+            if (!fill || !text || !prompt) return;
+            
+            if (player.abilityActive) {
+                // Show remaining duration
+                const remaining = Math.max(0, player.abilityEndTime - now);
+                const percent = (remaining / config.abilityDuration) * 100;
+                fill.style.width = percent + '%';
+                fill.style.background = 'linear-gradient(90deg, #FF0000, #FF6600)';
+                text.textContent = 'ABILITY ACTIVE!';
+                prompt.style.display = 'none';
+            } else if (now < player.abilityCooldownEnd) {
+                // Show cooldown
+                const remaining = player.abilityCooldownEnd - now;
+                const percent = 100 - (remaining / config.abilityCooldown) * 100;
+                fill.style.width = percent + '%';
+                fill.style.background = 'linear-gradient(90deg, #666, #888)';
+                text.textContent = 'Cooldown: ' + Math.ceil(remaining / 1000) + 's';
+                prompt.style.display = 'none';
+            } else {
+                // Ready
+                fill.style.width = '100%';
+                fill.style.background = 'linear-gradient(90deg, #FF6B00, #FFD700)';
+                text.textContent = 'ABILITY READY - Press Q';
+                prompt.style.display = 'block';
+            }
+        }
+
+        function performMartialArtsCombo(attackDir) {
+            const comboMoves = ['Jab!', 'Cross!', 'Kick!', 'Uppercut!', 'DRAGON STRIKE!'];
+            const moveIndex = Math.min(player.comboCount - 1, comboMoves.length - 1);
+            const damage = 30 + (player.comboCount * 15); // Increasing damage with combo
+            const range = 2.5 + (player.comboCount * 0.3); // Increasing range
+            
+            // Create combo effect particles
+            for (let i = 0; i < 5; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.15),
+                    new THREE.MeshBasicMaterial({ color: player.comboCount >= 5 ? 0xFF0000 : 0xFFFF00 })
+                );
+                particle.position.copy(player.position);
+                particle.position.add(attackDir.clone().multiplyScalar(1 + i * 0.3));
+                particle.position.y += 0.5;
+                scene.add(particle);
+                
+                const vel = attackDir.clone().multiplyScalar(0.3);
+                vel.y = Math.random() * 0.2;
+                bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 15 });
+            }
+            
+            // Hit enemies in range with combo damage
+            const attackPos = player.position.clone().add(attackDir.clone().multiplyScalar(range / 2));
+            enemies.forEach((enemy, idx) => {
+                const dist = attackPos.distanceTo(enemy.position);
+                if (dist < range) {
+                    enemy.health -= damage;
+                    if (enemy.health <= 0) {
+                        for (let i = 0; i < 15; i++) {
+                            createBloodParticle(enemy.position.clone(), 'large');
+                        }
+                        scene.remove(enemy.mesh);
+                        enemies.splice(idx, 1);
+                        gameState.kills++;
+                        trackKill('martialArts');
+                        updateUI();
+                    }
+                }
+            });
+        }
+
         function meleeAttack() {
+            const charType = gameSettings.character;
             const weapon = weapons[gameState.currentWeapon];
             const attackDir = new THREE.Vector3(
                 -Math.sin(player.lookAngle),
                 0,
                 -Math.cos(player.lookAngle)
             );
+            
+            // Kung Pow Chicken combo system when ability active
+            if (charType === 'kungPowChicken' && player.abilityActive) {
+                player.comboCount++;
+                performMartialArtsCombo(attackDir);
+                return;
+            }
             
             // Weapon swing animation
             if (player.weaponModel) {
@@ -2040,6 +2459,33 @@
             if (gameState.isPaused || gameState.isGameOver) return;
 
             const now = Date.now();
+            
+            // Titan Turkey ram damage check
+            if (gameSettings.character === 'titanTurkey' && player.abilityActive) {
+                const ramRadius = 1.5;
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const dist = player.position.distanceTo(enemy.position);
+                    if (dist < ramRadius) {
+                        enemy.health -= 60;
+                        // Knockback effect
+                        const knockDir = enemy.position.clone().sub(player.position).normalize();
+                        enemy.position.add(knockDir.multiplyScalar(2));
+                        enemy.mesh.position.copy(enemy.position);
+                        
+                        if (enemy.health <= 0) {
+                            for (let j = 0; j < 20; j++) {
+                                createBloodParticle(enemy.position.clone(), 'large');
+                            }
+                            scene.remove(enemy.mesh);
+                            enemies.splice(i, 1);
+                            gameState.kills++;
+                            trackKill('helmetCharge');
+                            updateUI();
+                        }
+                    }
+                }
+            }
             
             enemies.forEach((enemy, idx) => {
                 // Move toward player
@@ -2566,10 +3012,17 @@
             player.velocity.set(0, 0, 0);
             player.lookAngle = 0;
             
-            // Reset player appearance
-            player.mesh.userData.body.material.color.setHex(0xFFFF00);
-            player.mesh.userData.head.material.color.setHex(0xFFFF00);
-            player.mesh.rotation.x = 0;
+            // Reset ability state
+            player.abilityActive = false;
+            player.abilityEndTime = 0;
+            player.abilityCooldownEnd = 0;
+            player.comboCount = 0;
+            
+            // Recreate character mesh with selected character
+            scene.remove(player.mesh);
+            player.mesh = createCharacter(gameSettings.character);
+            player.mesh.position.copy(player.position);
+            scene.add(player.mesh);
             
             updatePlayerWeapon();
             
@@ -2709,6 +3162,8 @@
             document.getElementById('stats-page').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
             document.getElementById('quit-btn').style.display = 'none';
+            document.getElementById('ability-bar').style.display = 'none';
+            document.getElementById('ability-prompt').style.display = 'none';
         }
         
         function hideAllMenus() {
@@ -2891,6 +3346,15 @@
             document.querySelectorAll('.input-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.input === gameSettings.inputMethod);
             });
+            
+            // Set active character button
+            document.querySelectorAll('.char-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.char === gameSettings.character);
+            });
+            
+            // Update character description
+            const config = characterConfig[gameSettings.character];
+            document.getElementById('char-description').textContent = config ? config.description : '';
         }
         
         // Menu button handlers
@@ -2931,6 +3395,18 @@
                 document.querySelectorAll('.input-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 gameSettings.inputMethod = btn.dataset.input;
+                saveSettings();
+            });
+        });
+        
+        // Character selection buttons
+        document.querySelectorAll('.char-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameSettings.character = btn.dataset.char;
+                const config = characterConfig[gameSettings.character];
+                document.getElementById('char-description').textContent = config ? config.description : '';
                 saveSettings();
             });
         });
@@ -3008,6 +3484,7 @@
             
             updateDayNight();
             updatePlayer(delta);
+            updateAbilityState(delta);
             updateEnemies(delta);
             updateAlligators(delta);
             updateVehicles(delta);
