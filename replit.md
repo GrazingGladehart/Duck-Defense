@@ -12,7 +12,9 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 - **MOUSE** - Aim direction  
 - **SPACE** - Jump (press twice for double jump with wing flapping!)
 - **LEFT CLICK** - Attack/Shoot
+- **E** - Enter/Exit vehicles
 - **Collect weapons** to increase firepower against hunters
+- **Steal hunter trucks** after eliminating the driver
 - **Survive as long as possible!**
 
 ## Game Features
@@ -40,14 +42,23 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 - Darker ground vegetation
 - Dynamic day/night cycle with marsh-appropriate colors
 
+### Vehicles
+- **Hunter Trucks** - Spawn every 15-25 seconds with armed drivers
+- Kill the driver to hijack the vehicle
+- Drive with W/A/S/D, run over enemies for kills
+- Press E to enter/exit vehicles
+
 ### Advanced Mechanics
 - Enemy AI hunters that shoot at the player
 - Projectile collision with trees and hut (both player and enemy projectiles blocked)
 - Piercing projectiles for cannon/catapult (go through multiple enemies)
+- Catapult ground blast radius - explosions damage nearby enemies
+- Improved projectile accuracy with larger hit detection
 - Weapon pickup system
 - Score and lives tracking
 - Progressive difficulty
 - Gore effects and blood particles
+- Mobile controls support (toggle in settings)
 
 ## Technology Stack
 - **Three.js** (r128) - 3D graphics rendering
@@ -58,6 +69,13 @@ Duck Defense 3D is a browser-based 3D survival game built with Three.js. It's a 
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-23**: Vehicles and combat improvements
+  - Added pilotable hunter trucks that spawn with armed drivers
+  - Players can hijack vehicles after killing the driver
+  - Added catapult ground blast radius with explosion particles
+  - Improved projectile accuracy with larger hit detection radii
+  - Added mobile controls support (jump/attack buttons in settings)
+  - Added E key for vehicle entry/exit
 - **2025-10-12**: Major gameplay enhancements
   - Added double jump mechanic with wing flapping animation
   - Enhanced sword with hilt, pommel, and arc swing animation
