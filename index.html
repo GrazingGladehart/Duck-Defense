@@ -325,6 +325,7 @@
             <li><strong>MOUSE</strong> - Aim direction</li>
             <li><strong>SPACE</strong> - Jump (Double Jump!)</li>
             <li><strong>LEFT CLICK</strong> - Attack/Shoot</li>
+            <li><strong>E</strong> - Enter/Exit vehicles</li>
             <li><strong>Collect weapons</strong> to fight hunters!</li>
             <li><strong>Survive as long as you can!</strong></li>
         </ul>
@@ -350,7 +351,8 @@
             enemySpawnRate: 3000,
             lastSpawnTime: 0,
             gameStartTime: 0,
-            gameTime: 0
+            gameTime: 0,
+            vehicle: null
         };
 
         // ==================== WEAPONS CONFIG ====================
@@ -1150,6 +1152,71 @@
             });
         }
 
+        function createTruck() {
+            const truck = new THREE.Group();
+            const bodyGeom = new THREE.BoxGeometry(3, 1.2, 5);
+            const bodyMat = new THREE.MeshLambertMaterial({ color: 0x5a4a3a });
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            body.position.y = 1;
+            body.castShadow = true;
+            truck.add(body);
+            const cabinGeom = new THREE.BoxGeometry(2.5, 1.5, 2);
+            const cabinMat = new THREE.MeshLambertMaterial({ color: 0x3d3d3d });
+            const cabin = new THREE.Mesh(cabinGeom, cabinMat);
+            cabin.position.set(0, 2.2, 1);
+            cabin.castShadow = true;
+            truck.add(cabin);
+            const bedGeom = new THREE.BoxGeometry(2.8, 0.8, 2.5);
+            const bedMat = new THREE.MeshLambertMaterial({ color: 0x4a3a2a });
+            const bed = new THREE.Mesh(bedGeom, bedMat);
+            bed.position.set(0, 1.2, -1.2);
+            truck.add(bed);
+            const wheelGeom = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 12);
+            const wheelMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+            [[-1.4, 0.5, 1.5], [1.4, 0.5, 1.5], [-1.4, 0.5, -1.5], [1.4, 0.5, -1.5]].forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeom, wheelMat);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(...pos);
+                truck.add(wheel);
+            });
+            return truck;
+        }
+
+        const vehicles = [];
+        let lastTruckSpawnTime = Date.now();
+
+        function spawnTruckWithDriver() {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 48;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+            const terrainY = getTerrainHeight(x, z);
+            
+            const truck = createTruck();
+            truck.position.set(x, terrainY, z);
+            truck.rotation.y = angle + Math.PI;
+            scene.add(truck);
+            
+            const driver = createHunter();
+            driver.position.set(0, 2.5, 0.8);
+            truck.add(driver);
+            
+            const vehicle = {
+                mesh: truck,
+                position: new THREE.Vector3(x, terrainY, z),
+                rotation: angle + Math.PI,
+                velocity: new THREE.Vector3(),
+                hasDriver: true,
+                driver: {
+                    mesh: driver,
+                    health: 80,
+                    lastShootTime: 0,
+                    shootCooldown: 1500
+                }
+            };
+            vehicles.push(vehicle);
+        }
+
         function spawnEnemy() {
             const angle = Math.random() * Math.PI * 2;
             const distance = 45;
@@ -1206,7 +1273,9 @@
                 aoe: config.aoe || 0,
                 fromPlayer,
                 canPierce,
-                hitEnemies: []
+                hitEnemies: [],
+                hitVehicles: [],
+                weaponType: weaponType
             });
         }
 
@@ -1652,6 +1721,119 @@
                 spawnEnemy();
                 gameState.enemySpawnRate = Math.max(1000, gameState.enemySpawnRate - 50);
             }
+            
+            // Spawn trucks occasionally (every 15-25 seconds)
+            if (now - lastTruckSpawnTime > 15000 + Math.random() * 10000 && vehicles.length < 3) {
+                lastTruckSpawnTime = now;
+                spawnTruckWithDriver();
+            }
+        }
+
+        function updateVehicles(delta) {
+            if (gameState.isPaused || gameState.isGameOver) return;
+            
+            const now = Date.now();
+            
+            vehicles.forEach((vehicle, vIdx) => {
+                if (gameState.vehicle === vehicle) {
+                    // Player is driving this vehicle
+                    const driveSpeed = 0.15;
+                    const turnSpeed = 0.03;
+                    
+                    if (keys['w']) {
+                        vehicle.velocity.x -= Math.sin(vehicle.rotation) * driveSpeed;
+                        vehicle.velocity.z -= Math.cos(vehicle.rotation) * driveSpeed;
+                    }
+                    if (keys['s']) {
+                        vehicle.velocity.x += Math.sin(vehicle.rotation) * driveSpeed * 0.5;
+                        vehicle.velocity.z += Math.cos(vehicle.rotation) * driveSpeed * 0.5;
+                    }
+                    if (keys['a']) vehicle.rotation += turnSpeed;
+                    if (keys['d']) vehicle.rotation -= turnSpeed;
+                    
+                    vehicle.position.add(vehicle.velocity);
+                    vehicle.velocity.multiplyScalar(0.92);
+                    
+                    const terrainY = getTerrainHeight(vehicle.position.x, vehicle.position.z);
+                    vehicle.position.y = terrainY;
+                    
+                    vehicle.mesh.position.copy(vehicle.position);
+                    vehicle.mesh.rotation.y = vehicle.rotation;
+                    
+                    // Player follows vehicle
+                    player.position.copy(vehicle.position);
+                    player.position.y += 3;
+                    player.mesh.position.copy(player.position);
+                    player.mesh.visible = false;
+                    
+                    // Run over enemies!
+                    enemies.forEach((enemy, idx) => {
+                        const dist = vehicle.position.distanceTo(enemy.position);
+                        if (dist < 3) {
+                            for (let i = 0; i < 20; i++) {
+                                createBloodParticle(enemy.position.clone(), Math.random() < 0.3 ? 'large' : 'normal');
+                            }
+                            scene.remove(enemy.mesh);
+                            enemies.splice(idx, 1);
+                            gameState.kills++;
+                            updateUI();
+                        }
+                    });
+                    
+                    // Exit vehicle with E
+                    if (keys['e'] && !vehicle.exitCooldown) {
+                        gameState.vehicle = null;
+                        player.mesh.visible = true;
+                        player.position.x = vehicle.position.x + 3;
+                        player.position.z = vehicle.position.z;
+                        player.position.y = getTerrainHeight(player.position.x, player.position.z) + 1;
+                        player.mesh.position.copy(player.position);
+                        vehicle.exitCooldown = true;
+                        setTimeout(() => vehicle.exitCooldown = false, 500);
+                    }
+                } else if (vehicle.hasDriver) {
+                    // AI drives toward player
+                    const toPlayer = player.position.clone().sub(vehicle.position);
+                    const dist = toPlayer.length();
+                    
+                    if (dist > 10) {
+                        const targetAngle = Math.atan2(-toPlayer.x, -toPlayer.z);
+                        let angleDiff = targetAngle - vehicle.rotation;
+                        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                        vehicle.rotation += Math.sign(angleDiff) * Math.min(0.02, Math.abs(angleDiff));
+                        
+                        vehicle.velocity.x -= Math.sin(vehicle.rotation) * 0.08;
+                        vehicle.velocity.z -= Math.cos(vehicle.rotation) * 0.08;
+                    }
+                    
+                    vehicle.position.add(vehicle.velocity);
+                    vehicle.velocity.multiplyScalar(0.95);
+                    
+                    const terrainY = getTerrainHeight(vehicle.position.x, vehicle.position.z);
+                    vehicle.position.y = terrainY;
+                    
+                    vehicle.mesh.position.copy(vehicle.position);
+                    vehicle.mesh.rotation.y = vehicle.rotation;
+                    
+                    // Driver shoots
+                    if (dist < 35 && now - vehicle.driver.lastShootTime > vehicle.driver.shootCooldown) {
+                        vehicle.driver.lastShootTime = now;
+                        const shootDir = toPlayer.normalize();
+                        const start = vehicle.position.clone();
+                        start.y += 3;
+                        createEnemyProjectile(start, shootDir);
+                    }
+                } else {
+                    // Empty vehicle - player can enter with E
+                    const dist = player.position.distanceTo(vehicle.position);
+                    if (dist < 4 && keys['e'] && !gameState.vehicle && !vehicle.enterCooldown) {
+                        gameState.vehicle = vehicle;
+                        vehicle.enterCooldown = true;
+                        setTimeout(() => vehicle.enterCooldown = false, 500);
+                    }
+                }
+            });
         }
 
         function updateAlligators(delta) {
@@ -1778,12 +1960,18 @@
                 
                 // Check collisions
                 if (proj.fromPlayer) {
+                    // Larger hit radius for better accuracy
+                    let hitRadius = 2.0;
+                    if (proj.weaponType === 'rifle') hitRadius = 2.5;
+                    if (proj.weaponType === 'machineGun') hitRadius = 1.8;
+                    if (proj.weaponType === 'cannon') hitRadius = 3.0;
+                    if (proj.weaponType === 'catapult') hitRadius = 2.5;
+                    
                     enemies.forEach((enemy, idx) => {
                         const dist = proj.mesh.position.distanceTo(enemy.position);
-                        // Prevent hitting the same enemy twice with piercing projectiles
                         const alreadyHit = proj.hitEnemies && proj.hitEnemies.includes(enemy);
                         
-                        if (dist < 1 && !alreadyHit) {
+                        if (dist < hitRadius && !alreadyHit) {
                             enemy.health -= proj.damage;
                             
                             if (proj.canPierce) {
@@ -1791,18 +1979,50 @@
                             }
                             
                             if (enemy.health <= 0) {
-                                // Gore effect
                                 for (let i = 0; i < 15; i++) {
                                     createBloodParticle(enemy.position.clone());
                                 }
                                 scene.remove(enemy.mesh);
                                 enemies.splice(idx, 1);
-                                gameState.kills ++;
+                                gameState.kills++;
                                 updateUI();
                             }
                             
                             if (!proj.canPierce) {
                                 proj.lifetime = 0;
+                            }
+                        }
+                    });
+                    
+                    // Hit vehicle drivers
+                    vehicles.forEach((vehicle, vIdx) => {
+                        if (vehicle.hasDriver) {
+                            const driverPos = vehicle.position.clone();
+                            driverPos.y += 2.5;
+                            const dist = proj.mesh.position.distanceTo(driverPos);
+                            const alreadyHit = proj.hitVehicles && proj.hitVehicles.includes(vehicle);
+                            
+                            if (dist < hitRadius && !alreadyHit) {
+                                vehicle.driver.health -= proj.damage;
+                                
+                                if (proj.canPierce) {
+                                    if (!proj.hitVehicles) proj.hitVehicles = [];
+                                    proj.hitVehicles.push(vehicle);
+                                }
+                                
+                                if (vehicle.driver.health <= 0) {
+                                    for (let i = 0; i < 20; i++) {
+                                        createBloodParticle(driverPos, Math.random() < 0.3 ? 'large' : 'normal');
+                                    }
+                                    vehicle.mesh.remove(vehicle.driver.mesh);
+                                    vehicle.hasDriver = false;
+                                    gameState.kills++;
+                                    updateUI();
+                                }
+                                
+                                if (!proj.canPierce) {
+                                    proj.lifetime = 0;
+                                }
                             }
                         }
                     });
@@ -1823,6 +2043,45 @@
                             gameOver();
                         }
                     }
+                }
+                
+                // Catapult ground blast radius
+                if (proj.weaponType === 'catapult' && proj.mesh.position.y <= terrainY + 0.5) {
+                    const blastRadius = 6;
+                    // Create explosion effect
+                    for (let j = 0; j < 15; j++) {
+                        const particle = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.3, 6, 6),
+                            new THREE.MeshLambertMaterial({ color: 0xFF6600 })
+                        );
+                        particle.position.copy(proj.mesh.position);
+                        scene.add(particle);
+                        const vel = new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.5,
+                            Math.random() * 0.4,
+                            (Math.random() - 0.5) * 0.5
+                        );
+                        bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 30 });
+                    }
+                    
+                    // Damage all enemies in blast radius
+                    enemies.forEach((enemy, idx) => {
+                        const dist = proj.mesh.position.distanceTo(enemy.position);
+                        if (dist < blastRadius) {
+                            const damage = proj.damage * (1 - dist / blastRadius);
+                            enemy.health -= damage;
+                            if (enemy.health <= 0) {
+                                for (let k = 0; k < 20; k++) {
+                                    createBloodParticle(enemy.position.clone(), 'large');
+                                }
+                                scene.remove(enemy.mesh);
+                                enemies.splice(idx, 1);
+                                gameState.kills++;
+                                updateUI();
+                            }
+                        }
+                    });
+                    proj.lifetime = 0;
                 }
                 
                 if (proj.lifetime <= 0 || proj.mesh.position.y < terrainY) {
@@ -1938,6 +2197,12 @@
             alligators.forEach(g => scene.remove(g.mesh));
             alligators.length = 0;
             
+            vehicles.forEach(v => scene.remove(v.mesh));
+            vehicles.length = 0;
+            gameState.vehicle = null;
+            lastTruckSpawnTime = Date.now();
+            player.mesh.visible = true;
+            
             // Respawn alligators
             for (let i = 0; i < 8; i++) {
                 const waterZone = waterZones[Math.floor(Math.random() * waterZones.length)];
@@ -2012,7 +2277,12 @@
         document.getElementById('mobile-attack').addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (!gameState.isPaused && !gameState.isGameOver) {
-                attack();
+                const weapon = weapons[gameState.currentWeapon];
+                if (weapon.type === 'melee') {
+                    meleeAttack();
+                } else {
+                    shootProjectile();
+                }
             }
         });
 
@@ -2022,6 +2292,7 @@
             gameState.isPaused = false;
             gameState.gameStartTime = Date.now();
             gameState.lastSpawnTime = Date.now();
+            lastTruckSpawnTime = Date.now();
         });
 
         document.getElementById('restart-btn').addEventListener('click', () => {
@@ -2056,6 +2327,12 @@
             
             alligators.forEach(g => scene.remove(g.mesh));
             alligators.length = 0;
+            
+            vehicles.forEach(v => scene.remove(v.mesh));
+            vehicles.length = 0;
+            gameState.vehicle = null;
+            lastTruckSpawnTime = 0;
+            player.mesh.visible = true;
             
             projectiles.forEach(p => scene.remove(p.mesh));
             projectiles.length = 0;
@@ -2093,6 +2370,7 @@
             updatePlayer(delta);
             updateEnemies(delta);
             updateAlligators(delta);
+            updateVehicles(delta);
             updateProjectiles(delta);
             updateBloodParticles(delta);
             updateWindStreaks(delta);
