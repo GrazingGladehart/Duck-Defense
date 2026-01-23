@@ -77,12 +77,30 @@ The game features a full menu system:
 - Mobile controls with virtual joystick for movement and action buttons
 
 ### Playable Characters
-Each character has unique colors, features, and a special ability (activated with Q key):
+Each character has unique colors, features, a primary ability (Q key), and a special ability (orb-powered):
 
-- **Duck** (Classic yellow) - No special ability, balanced gameplay
-- **Titan Turkey** (Brown/red with wattle) - Helmet Charge: Puts on football helmet, doubles movement speed, rams through enemies for 10 seconds. 15s cooldown.
-- **Kung Pow Chicken** (White with red headband) - Martial Arts: 5 seconds of combo attacks with increasing damage and range. 8s cooldown.
-- **Merica Mallard** (Patriotic blue with Uncle Sam hat) - Eagle Strike: Instant AOE attack that damages all enemies within 8 units. 12s cooldown.
+- **Duck** (Classic yellow) - No abilities, balanced gameplay
+- **Titan Turkey** (Brown/red with wattle)
+  - Primary (Q): Helmet Charge - doubles speed, rams through enemies for 10s
+  - Special: Turkey Stomp - massive ground pound AOE attack
+- **Kung Pow Chicken** (White with red headband)
+  - Primary (Q): Martial Arts - 5s of combo attacks with increasing damage
+  - Special: Ninja Vanish - become invisible for 8s, enemies can't target you
+- **Merica Mallard** (Patriotic blue with Uncle Sam hat)
+  - Primary (Q): Eagle Strike - instant AOE damage to nearby enemies
+  - Special: Freedom Bombs - rain 6 explosive bombs from the sky
+
+### Special Orb System
+- **Orbs drop** from slain hunters (25% chance)
+- **Collect orbs** to charge your special ability
+- **Click the special button** (bottom right) to activate
+- Each orb gives you one special charge
+- Special button shows your current charge count
+
+### Enemy Types
+- **Basic Hunter** (0-2 min) - Standard rifle-wielding hunter
+- **Catapult Hunter** (2+ min) - Fires explosive projectiles, wears military helmet
+- **Hulk Hunter** (4+ min) - Massive green brute with spiked club, multiple lives, melee only
 
 ## Technology Stack
 - **Three.js** (r128) - 3D graphics rendering
@@ -93,10 +111,19 @@ Each character has unique colors, features, and a special ability (activated wit
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-23**: Special orb system and new enemy types
+  - Added special orb pickups that drop from slain enemies (25% chance)
+  - Each character now has both primary (Q key) and special (orb-powered) abilities
+  - Titan Turkey: Turkey Stomp ground pound AOE
+  - Kung Pow Chicken: Ninja Vanish invisibility (enemies can't target you)
+  - Merica Mallard: Freedom Bombs aerial bombardment
+  - Added special button UI showing charge count
+  - Added Catapult Hunter (spawns after 2 min) - fires explosive projectiles
+  - Added Hulk Hunter (spawns after 4 min) - giant with spiked club, multiple lives
 - **2026-01-23**: Character selection system
   - Added 4 playable characters: Duck, Titan Turkey, Kung Pow Chicken, Merica Mallard
   - Each character has unique visual design and colors
-  - Character-specific special abilities activated with Q key
+  - Character-specific primary abilities activated with Q key
   - Ability cooldown and duration system with UI indicators
   - Character selection persists to localStorage
 - **2026-01-23**: Menu system and stats tracking

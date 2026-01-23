@@ -494,6 +494,66 @@
             z-index: 10;
         }
 
+        #special-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a0080, #9400D3);
+            border: 3px solid #FFD700;
+            cursor: pointer;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: all 0.2s;
+            box-shadow: 0 0 20px rgba(148, 0, 211, 0.5);
+        }
+
+        #special-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(148, 0, 211, 0.8);
+        }
+
+        #special-btn:active {
+            transform: scale(0.95);
+        }
+
+        #special-btn.disabled {
+            background: linear-gradient(135deg, #333, #555);
+            border-color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #special-icon {
+            font-size: 24px;
+            color: #FFD700;
+        }
+
+        #special-count {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+        }
+
+        #special-name {
+            font-size: 10px;
+            color: #ccc;
+        }
+
+        #special-btn.active {
+            animation: pulse-special 0.5s infinite alternate;
+        }
+
+        @keyframes pulse-special {
+            from { box-shadow: 0 0 20px rgba(148, 0, 211, 0.5); }
+            to { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+        }
+
         /* Stats Page */
         #stats-page {
             position: absolute;
@@ -614,6 +674,12 @@
         <div id="ability-text">ABILITY READY - Press Q</div>
     </div>
     <div id="ability-prompt">Press Q for Special Ability!</div>
+    
+    <button id="special-btn">
+        <span id="special-icon">★</span>
+        <span id="special-count">0</span>
+        <span id="special-name">Special</span>
+    </button>
 
     <div id="mobile-controls">
         <div id="joystick-container">
@@ -703,37 +769,51 @@
         };
         
         // Character configurations
+        // Primary ability = Q key (cooldown-based, always available)
+        // Special ability = Orb-powered (collect orbs from enemies)
         const characterConfig = {
             duck: {
                 name: 'Duck',
                 description: 'Classic yellow duck - balanced gameplay',
                 colors: { body: 0xFFFF00, head: 0xFFFF00, beak: 0xFFA500, wing: 0xFFDD00 },
                 ability: null,
-                abilityCooldown: 0
+                abilityCooldown: 0,
+                special: null,
+                specialName: 'None',
+                orbColor: 0xFFFF00
             },
             titanTurkey: {
                 name: 'Titan Turkey',
-                description: 'Football helmet charge - ram through enemies!',
+                description: 'Helmet Charge (Q) + Turkey Stomp special!',
                 colors: { body: 0x8B4513, head: 0xCC3333, beak: 0xFFAA00, wing: 0x6B3513 },
                 ability: 'helmetCharge',
                 abilityCooldown: 15000,
-                abilityDuration: 10000
+                abilityDuration: 10000,
+                special: 'turkeyStomp',
+                specialName: 'Turkey Stomp',
+                orbColor: 0xFF6600
             },
             kungPowChicken: {
                 name: 'Kung Pow Chicken',
-                description: 'Martial arts master - devastating combo attacks!',
+                description: 'Martial Arts (Q) + Ninja Vanish special!',
                 colors: { body: 0xFFFFFF, head: 0xFFFFFF, beak: 0xFFCC00, wing: 0xEEEEEE },
                 ability: 'martialArts',
                 abilityCooldown: 8000,
-                abilityDuration: 5000
+                abilityDuration: 5000,
+                special: 'ninjaVanish',
+                specialName: 'Ninja Vanish',
+                orbColor: 0x9400D3
             },
             mericaMallard: {
                 name: 'Merica Mallard',
-                description: 'Patriotic power - eagle strike from above!',
+                description: 'Eagle Strike (Q) + Freedom Bombs special!',
                 colors: { body: 0x002868, head: 0x002868, beak: 0xBF0A30, wing: 0xFFFFFF },
                 ability: 'eagleStrike',
                 abilityCooldown: 12000,
-                abilityDuration: 0
+                abilityDuration: 0,
+                special: 'freedomBombs',
+                specialName: 'Freedom Bombs',
+                orbColor: 0xFFD700
             }
         };
         
@@ -822,6 +902,7 @@
             currentWeapon: 'fists',
             isGameOver: false,
             isPaused: true,
+            playing: false,
             enemySpawnRate: 3000,
             lastSpawnTime: 0,
             gameStartTime: 0,
@@ -1483,12 +1564,17 @@
             weaponModel: null,
             wingFlapTime: 0,
             bloodDripCounter: 0,
-            // Ability system
+            // Ability system (Q key - cooldown based)
             abilityActive: false,
             abilityEndTime: 0,
             abilityCooldownEnd: 0,
             comboCount: 0,
-            lastComboTime: 0
+            lastComboTime: 0,
+            // Special system (orb powered)
+            specialCharges: 0,
+            specialActive: false,
+            specialEndTime: 0,
+            isInvisible: false
         };
 
         player.mesh.position.copy(player.position);
@@ -2003,6 +2089,51 @@
             });
         }
 
+        function handleEnemyDeath(enemy, idx, killSource) {
+            if (enemy.type === 'hulk' && enemy.lives > 1) {
+                // Hulk loses a life but keeps fighting
+                enemy.lives--;
+                enemy.health = enemy.maxHealth;
+                
+                // Rage effect - flash red
+                enemy.mesh.traverse(child => {
+                    if (child.material) {
+                        child.material.emissive = new THREE.Color(0xFF0000);
+                        setTimeout(() => {
+                            if (child.material) child.material.emissive = new THREE.Color(0x000000);
+                        }, 200);
+                    }
+                });
+                
+                // Roar particles
+                for (let i = 0; i < 15; i++) {
+                    const particle = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.15),
+                        new THREE.MeshBasicMaterial({ color: 0xFF4500 })
+                    );
+                    particle.position.copy(enemy.position);
+                    particle.position.y += 2;
+                    scene.add(particle);
+                    const vel = new THREE.Vector3((Math.random() - 0.5) * 0.3, 0.2, (Math.random() - 0.5) * 0.3);
+                    bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 20 });
+                }
+                
+                return false; // Enemy not fully dead
+            }
+            
+            // Normal death
+            for (let i = 0; i < (enemy.type === 'hulk' ? 40 : 15); i++) {
+                createBloodParticle(enemy.position.clone(), enemy.type === 'hulk' ? 'large' : 'normal');
+            }
+            scene.remove(enemy.mesh);
+            enemies.splice(idx, 1);
+            gameState.kills++;
+            trackKill(killSource);
+            createSpecialOrb(enemy.position.clone());
+            updateUI();
+            return true; // Enemy fully dead
+        }
+
         function createEnemyProjectile(start, direction) {
             const geom = new THREE.SphereGeometry(0.12, 6, 6);
             const mat = new THREE.MeshLambertMaterial({ color: 0x000000 });
@@ -2019,9 +2150,389 @@
                 fromPlayer: false
             });
         }
+        
+        function createCatapultProjectile(start, direction, fromPlayer = true) {
+            const geom = new THREE.SphereGeometry(0.35, 8, 8);
+            const mat = new THREE.MeshLambertMaterial({ color: fromPlayer ? 0xFF6600 : 0x8B0000 });
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.position.copy(start);
+            mesh.castShadow = true;
+            scene.add(mesh);
+            
+            // Add trailing fire effect
+            const trailGeom = new THREE.SphereGeometry(0.2, 6, 6);
+            const trailMat = new THREE.MeshBasicMaterial({ color: 0xFF4500, transparent: true, opacity: 0.7 });
+            const trail = new THREE.Mesh(trailGeom, trailMat);
+            trail.position.set(-0.3, 0, 0);
+            mesh.add(trail);
+            
+            // Arc trajectory for catapult
+            const vel = direction.clone().multiplyScalar(0.4);
+            vel.y = 0.25; // Arc upward
+            
+            projectiles.push({
+                mesh,
+                velocity: vel,
+                damage: fromPlayer ? 60 : 2,
+                lifetime: 200,
+                fromPlayer: fromPlayer,
+                isExplosive: true,
+                explosionRadius: fromPlayer ? 5 : 4,
+                weaponType: 'catapult'
+            });
+        }
 
         // ==================== WEAPON PICKUPS ====================
         const pickups = [];
+        const specialOrbs = [];
+
+        function createSpecialOrb(position) {
+            const charType = gameSettings.character;
+            const config = characterConfig[charType];
+            if (!config.special) return; // Duck doesn't get orbs
+            
+            // 25% chance to drop orb
+            if (Math.random() > 0.25) return;
+            
+            const orb = new THREE.Group();
+            
+            // Core orb
+            const coreGeom = new THREE.SphereGeometry(0.3, 16, 16);
+            const coreMat = new THREE.MeshBasicMaterial({ 
+                color: config.orbColor,
+                transparent: true,
+                opacity: 0.8
+            });
+            const core = new THREE.Mesh(coreGeom, coreMat);
+            orb.add(core);
+            
+            // Outer glow ring
+            const ringGeom = new THREE.TorusGeometry(0.4, 0.05, 8, 16);
+            const ringMat = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF,
+                transparent: true,
+                opacity: 0.6
+            });
+            const ring = new THREE.Mesh(ringGeom, ringMat);
+            orb.add(ring);
+            
+            // Star inside
+            const starGeom = new THREE.OctahedronGeometry(0.15, 0);
+            const starMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+            const star = new THREE.Mesh(starGeom, starMat);
+            orb.add(star);
+            orb.userData.star = star;
+            
+            orb.position.copy(position);
+            orb.position.y += 1;
+            scene.add(orb);
+            
+            specialOrbs.push({
+                mesh: orb,
+                position: orb.position.clone(),
+                rotation: 0,
+                bobPhase: Math.random() * Math.PI * 2,
+                lifetime: 600 // 10 seconds at 60fps
+            });
+        }
+
+        function updateSpecialOrbs(delta) {
+            for (let i = specialOrbs.length - 1; i >= 0; i--) {
+                const orb = specialOrbs[i];
+                
+                // Animate
+                orb.rotation += 0.03;
+                orb.mesh.rotation.y = orb.rotation;
+                orb.mesh.rotation.x = Math.sin(orb.rotation * 0.5) * 0.3;
+                orb.bobPhase += 0.05;
+                orb.mesh.position.y = orb.position.y + Math.sin(orb.bobPhase) * 0.3;
+                
+                // Star spins faster
+                if (orb.mesh.userData.star) {
+                    orb.mesh.userData.star.rotation.y = orb.rotation * 3;
+                    orb.mesh.userData.star.rotation.x = orb.rotation * 2;
+                }
+                
+                // Check pickup
+                const dist = player.position.distanceTo(orb.mesh.position);
+                if (dist < 2) {
+                    player.specialCharges++;
+                    updateSpecialUI();
+                    
+                    // Pickup effect
+                    for (let j = 0; j < 10; j++) {
+                        const particle = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.1),
+                            new THREE.MeshBasicMaterial({ color: characterConfig[gameSettings.character].orbColor })
+                        );
+                        particle.position.copy(orb.mesh.position);
+                        scene.add(particle);
+                        const vel = new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.3,
+                            Math.random() * 0.3,
+                            (Math.random() - 0.5) * 0.3
+                        );
+                        bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 20 });
+                    }
+                    
+                    scene.remove(orb.mesh);
+                    specialOrbs.splice(i, 1);
+                    continue;
+                }
+                
+                // Lifetime
+                orb.lifetime--;
+                if (orb.lifetime <= 0) {
+                    scene.remove(orb.mesh);
+                    specialOrbs.splice(i, 1);
+                }
+            }
+        }
+
+        function updateSpecialUI() {
+            const charType = gameSettings.character;
+            const config = characterConfig[charType];
+            const btn = document.getElementById('special-btn');
+            
+            if (!config.special || !gameState.playing) {
+                btn.style.display = 'none';
+                return;
+            }
+            
+            btn.style.display = 'flex';
+            document.getElementById('special-count').textContent = player.specialCharges;
+            document.getElementById('special-name').textContent = config.specialName;
+            
+            if (player.specialCharges > 0 && !player.specialActive) {
+                btn.classList.remove('disabled');
+                btn.classList.add('active');
+            } else {
+                btn.classList.add('disabled');
+                btn.classList.remove('active');
+            }
+        }
+
+        function activateSpecial() {
+            const charType = gameSettings.character;
+            const config = characterConfig[charType];
+            if (!config.special) return;
+            if (player.specialCharges <= 0) return;
+            if (player.specialActive) return;
+            
+            player.specialCharges--;
+            updateSpecialUI();
+            
+            switch (config.special) {
+                case 'turkeyStomp':
+                    executeTurkeyStomp();
+                    break;
+                case 'ninjaVanish':
+                    executeNinjaVanish();
+                    break;
+                case 'freedomBombs':
+                    executeFreedomBombs();
+                    break;
+            }
+        }
+
+        function executeTurkeyStomp() {
+            // Jump high and slam down with massive AOE
+            player.velocity.y = 0.8;
+            player.specialActive = true;
+            player.specialEndTime = Date.now() + 1000;
+            
+            // Delayed ground pound effect
+            setTimeout(() => {
+                const stompRadius = 12;
+                // Ground crack effect
+                for (let i = 0; i < 30; i++) {
+                    const angle = (i / 30) * Math.PI * 2;
+                    const dist = Math.random() * stompRadius;
+                    const particle = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.4, 0.2, 0.4),
+                        new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+                    );
+                    particle.position.set(
+                        player.position.x + Math.cos(angle) * dist,
+                        player.position.y,
+                        player.position.z + Math.sin(angle) * dist
+                    );
+                    scene.add(particle);
+                    const vel = new THREE.Vector3(Math.cos(angle) * 0.2, 0.3, Math.sin(angle) * 0.2);
+                    bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 40 });
+                }
+                
+                // Damage enemies
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const dist = player.position.distanceTo(enemy.position);
+                    if (dist < stompRadius) {
+                        enemy.health -= 100;
+                        if (enemy.health <= 0) {
+                            for (let j = 0; j < 20; j++) {
+                                createBloodParticle(enemy.position.clone(), 'large');
+                            }
+                            scene.remove(enemy.mesh);
+                            enemies.splice(i, 1);
+                            gameState.kills++;
+                            trackKill('turkeyStomp');
+                            createSpecialOrb(enemy.position.clone());
+                            updateUI();
+                        }
+                    }
+                }
+                player.specialActive = false;
+            }, 500);
+        }
+
+        function executeNinjaVanish() {
+            // Become invisible for 8 seconds
+            player.isInvisible = true;
+            player.specialActive = true;
+            player.specialEndTime = Date.now() + 8000;
+            
+            // Make player semi-transparent
+            player.mesh.traverse(child => {
+                if (child.material) {
+                    child.material.transparent = true;
+                    child.material.opacity = 0.3;
+                }
+            });
+            
+            // Smoke effect
+            for (let i = 0; i < 15; i++) {
+                const smoke = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.3),
+                    new THREE.MeshBasicMaterial({ 
+                        color: 0x666666, 
+                        transparent: true, 
+                        opacity: 0.7 
+                    })
+                );
+                smoke.position.copy(player.position);
+                smoke.position.x += (Math.random() - 0.5) * 2;
+                smoke.position.z += (Math.random() - 0.5) * 2;
+                scene.add(smoke);
+                const vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.1,
+                    0.1 + Math.random() * 0.1,
+                    (Math.random() - 0.5) * 0.1
+                );
+                bloodParticles.push({ mesh: smoke, velocity: vel, lifetime: 30 });
+            }
+        }
+
+        function executeFreedomBombs() {
+            // Drop 6 bombs from the sky in a pattern
+            player.specialActive = true;
+            player.specialEndTime = Date.now() + 3000;
+            
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    const angle = (i / 6) * Math.PI * 2;
+                    const distance = 5 + Math.random() * 5;
+                    const targetX = player.position.x + Math.cos(angle) * distance;
+                    const targetZ = player.position.z + Math.sin(angle) * distance;
+                    
+                    // Bomb mesh falling from sky
+                    const bomb = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.4),
+                        new THREE.MeshLambertMaterial({ color: 0xBF0A30 })
+                    );
+                    bomb.position.set(targetX, 30, targetZ);
+                    scene.add(bomb);
+                    
+                    // Animate bomb falling
+                    const fallInterval = setInterval(() => {
+                        bomb.position.y -= 1;
+                        if (bomb.position.y <= getTerrainHeight(targetX, targetZ)) {
+                            clearInterval(fallInterval);
+                            scene.remove(bomb);
+                            
+                            // Explosion!
+                            createExplosion(new THREE.Vector3(targetX, getTerrainHeight(targetX, targetZ), targetZ), 6, 80);
+                        }
+                    }, 30);
+                }, i * 200);
+            }
+            
+            setTimeout(() => { player.specialActive = false; }, 3000);
+        }
+
+        function updateSpecialState(delta) {
+            const now = Date.now();
+            
+            // Check if ninja vanish ended
+            if (player.isInvisible && now >= player.specialEndTime) {
+                player.isInvisible = false;
+                player.specialActive = false;
+                
+                // Restore player visibility
+                player.mesh.traverse(child => {
+                    if (child.material) {
+                        child.material.transparent = false;
+                        child.material.opacity = 1.0;
+                    }
+                });
+                
+                // Reappear effect
+                for (let i = 0; i < 10; i++) {
+                    const puff = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.2),
+                        new THREE.MeshBasicMaterial({ color: 0x9400D3, transparent: true, opacity: 0.7 })
+                    );
+                    puff.position.copy(player.position);
+                    puff.position.x += (Math.random() - 0.5) * 1.5;
+                    puff.position.z += (Math.random() - 0.5) * 1.5;
+                    scene.add(puff);
+                    const vel = new THREE.Vector3((Math.random() - 0.5) * 0.1, 0.15, (Math.random() - 0.5) * 0.1);
+                    bloodParticles.push({ mesh: puff, velocity: vel, lifetime: 20 });
+                }
+            }
+            
+            // Update special UI
+            updateSpecialUI();
+        }
+
+        function createExplosion(position, radius, damage) {
+            // Visual explosion
+            for (let i = 0; i < 25; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.3),
+                    new THREE.MeshBasicMaterial({ 
+                        color: Math.random() > 0.5 ? 0xFF4500 : 0xFFD700 
+                    })
+                );
+                particle.position.copy(position);
+                scene.add(particle);
+                const vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.5,
+                    Math.random() * 0.5,
+                    (Math.random() - 0.5) * 0.5
+                );
+                bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 25 });
+            }
+            
+            // Damage enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const dist = position.distanceTo(enemy.position);
+                if (dist < radius) {
+                    enemy.health -= damage;
+                    if (enemy.health <= 0) {
+                        for (let j = 0; j < 20; j++) {
+                            createBloodParticle(enemy.position.clone(), 'large');
+                        }
+                        scene.remove(enemy.mesh);
+                        enemies.splice(i, 1);
+                        gameState.kills++;
+                        trackKill('freedomBombs');
+                        createSpecialOrb(enemy.position.clone());
+                        updateUI();
+                    }
+                }
+            }
+        }
 
         function createPickup(weaponType) {
             const geom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
@@ -2399,6 +2910,7 @@
                         enemies.splice(i, 1);
                         gameState.kills++;
                         trackKill('eagleStrike');
+                        createSpecialOrb(enemy.position.clone());
                         updateUI();
                     }
                 }
@@ -2512,6 +3024,7 @@
                         enemies.splice(idx, 1);
                         gameState.kills++;
                         trackKill('martialArts');
+                        createSpecialOrb(enemy.position.clone());
                         updateUI();
                     }
                 }
@@ -2598,6 +3111,7 @@
                             enemies.splice(idx, 1);
                             gameState.kills++;
                             trackKill(gameState.currentWeapon);
+                            createSpecialOrb(enemy.position.clone());
                             updateUI();
                         }
                     }
@@ -2645,6 +3159,7 @@
                             enemies.splice(i, 1);
                             gameState.kills++;
                             trackKill('helmetCharge');
+                            createSpecialOrb(enemy.position.clone());
                             updateUI();
                         }
                     }
@@ -2652,29 +3167,74 @@
             }
             
             enemies.forEach((enemy, idx) => {
-                // Move toward player
+                // Move toward player (unless invisible)
                 const toPlayer = player.position.clone().sub(enemy.position);
                 const dist = toPlayer.length();
                 
-                if (dist > 5) {
-                    toPlayer.normalize().multiplyScalar(0.06);
+                // Movement speed varies by enemy type
+                let moveSpeed = 0.06;
+                if (enemy.type === 'hulk') moveSpeed = 0.08; // Hulks move faster
+                if (enemy.type === 'catapult') moveSpeed = 0.04; // Catapult hunters are slower
+                
+                const minDist = enemy.type === 'hulk' ? 3 : 5; // Hulks get closer
+                
+                if (dist > minDist && !player.isInvisible) {
+                    toPlayer.normalize().multiplyScalar(moveSpeed);
                     enemy.position.add(toPlayer);
                     
                     // Keep on terrain
                     const terrainY = getTerrainHeight(enemy.position.x, enemy.position.z);
-                    enemy.position.y = terrainY + 1;
+                    const yOffset = enemy.type === 'hulk' ? 1.5 : 1;
+                    enemy.position.y = terrainY + yOffset;
                     
                     enemy.mesh.position.copy(enemy.position);
                     enemy.mesh.lookAt(player.position);
                 }
                 
-                // Shoot at player with improved accuracy
-                if (dist < 30 && now - enemy.lastShootTime > enemy.shootCooldown) {
-                    enemy.lastShootTime = now;
-                    const shootDir = toPlayer.normalize();
-                    const start = enemy.position.clone();
-                    start.y += 1;
-                    createEnemyProjectile(start, shootDir);
+                // Combat behavior based on enemy type
+                if (!player.isInvisible) {
+                    if (enemy.type === 'hulk') {
+                        // Hulk melee attack
+                        if (dist < 4 && now - enemy.lastMeleeTime > 1500) {
+                            enemy.lastMeleeTime = now;
+                            
+                            // Club swing animation
+                            enemy.mesh.rotation.y += 0.5;
+                            
+                            // Damage player if in range
+                            if (dist < 3) {
+                                gameState.lives--;
+                                updateUI();
+                                
+                                // Knockback effect on player
+                                const knockDir = player.position.clone().sub(enemy.position).normalize();
+                                player.velocity.add(knockDir.multiplyScalar(0.5));
+                                
+                                // Impact particles
+                                for (let i = 0; i < 10; i++) {
+                                    createBloodParticle(player.position.clone(), 'normal');
+                                }
+                            }
+                        }
+                    } else if (enemy.type === 'catapult') {
+                        // Catapult hunter shoots explosive projectiles
+                        if (dist < 35 && now - enemy.lastShootTime > enemy.shootCooldown) {
+                            enemy.lastShootTime = now;
+                            const shootDir = toPlayer.normalize();
+                            const start = enemy.position.clone();
+                            start.y += 1.5;
+                            createCatapultProjectile(start, shootDir, false);
+                        }
+                    } else {
+                        // Basic hunter shoots regular projectiles
+                        if (dist < 30 && now - enemy.lastShootTime > enemy.shootCooldown) {
+                            enemy.lastShootTime = now;
+                            const shootDir = toPlayer.normalize();
+                            const start = enemy.position.clone();
+                            start.y += 1;
+                            createEnemyProjectile(start, shootDir);
+                        }
+                    }
                 }
             });
 
@@ -2755,6 +3315,7 @@
                             enemies.splice(idx, 1);
                             gameState.kills++;
                             trackKill('vehicle');
+                            createSpecialOrb(enemy.position.clone());
                             sessionStats.vehicleKills++;
                             updateUI();
                         }
@@ -2901,6 +3462,7 @@
             enemies.splice(idx, 1);
             gameState.kills++;
             trackKill(proj.weaponType || 'projectile');
+            createSpecialOrb(enemy.position.clone());
             updateUI();
             }
 
@@ -2970,6 +3532,7 @@
                                 enemies.splice(idx, 1);
                                 gameState.kills++;
                                 trackKill(proj.weaponType || gameState.currentWeapon);
+                                createSpecialOrb(enemy.position.clone());
                                 updateUI();
                             }
                             
@@ -3064,6 +3627,7 @@
                                 enemies.splice(idx, 1);
                                 gameState.kills++;
                                 trackKill('catapult');
+                                createSpecialOrb(enemy.position.clone());
                                 updateUI();
                             }
                         }
@@ -3181,6 +3745,14 @@
             player.abilityEndTime = 0;
             player.abilityCooldownEnd = 0;
             player.comboCount = 0;
+            player.specialCharges = 0;
+            player.specialActive = false;
+            player.specialEndTime = 0;
+            player.isInvisible = false;
+            
+            // Clear special orbs
+            specialOrbs.forEach(orb => scene.remove(orb.mesh));
+            specialOrbs.length = 0;
             
             // Recreate character mesh with selected character
             scene.remove(player.mesh);
@@ -3321,6 +3893,7 @@
 
         // ==================== MENU NAVIGATION ====================
         function showMenu() {
+            gameState.playing = false;
             document.getElementById('main-menu').style.display = 'flex';
             document.getElementById('settings-page').style.display = 'none';
             document.getElementById('stats-page').style.display = 'none';
@@ -3328,6 +3901,7 @@
             document.getElementById('quit-btn').style.display = 'none';
             document.getElementById('ability-bar').style.display = 'none';
             document.getElementById('ability-prompt').style.display = 'none';
+            document.getElementById('special-btn').style.display = 'none';
         }
         
         function hideAllMenus() {
@@ -3339,6 +3913,7 @@
         function startGame() {
             hideAllMenus();
             resetSessionStats();
+            gameState.playing = true;
             document.getElementById('quit-btn').style.display = 'block';
             
             // Apply difficulty settings
@@ -3580,6 +4155,12 @@
             startGame();
         });
 
+        document.getElementById('special-btn').addEventListener('click', () => {
+            if (gameState.playing && player.specialCharges > 0 && !player.specialActive) {
+                activateSpecial();
+            }
+        });
+
         document.getElementById('quit-btn').addEventListener('click', () => {
             gameState.isPaused = true;
             
@@ -3656,6 +4237,8 @@
             updateBloodParticles(delta);
             updateWindStreaks(delta);
             updatePickups(delta);
+            updateSpecialOrbs(delta);
+            updateSpecialState(delta);
             
             renderer.render(scene, camera);
         }
