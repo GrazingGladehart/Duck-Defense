@@ -89,6 +89,16 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 - **Merica Mallard** (Patriotic blue with Uncle Sam hat)
   - Primary (Q): Eagle Strike - instant AOE damage to nearby enemies
   - Special: Freedom Bombs - rain 6 explosive bombs from the sky
+- **Chick 7** (Fluffy yellow baby chick)
+  - Special: 67 Windy Wing - creates tornado that pushes enemies away, invulnerable during use
+  - Wings animate in the signature 67 offset pattern
+- **Loonatic** (Dark berserker loon with crazy red eyes)
+  - Special: Berserker Rage - 80% faster weapon recharge for 10 seconds
+  - Features red rage aura while active
+- **Eggy Surprise** (Large rolling egg - can't attack!)
+  - Can only roll around, no combat abilities
+  - Gets cracked and leaks yolk as it takes damage
+  - On death: Eggsplosion deals massive AOE damage, then transforms into random bird at full health!
 
 ### Special Orb System
 - **Orbs drop** from slain hunters (25% chance)
@@ -111,6 +121,11 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-23**: New bird variants
+  - Added Chick 7 with 67 Windy Wing tornado special (pushes enemies, invulnerable)
+  - Added Loonatic berserker loon with 80% weapon recharge boost
+  - Added Eggy Surprise - rolling egg that eggsplosions on death and transforms into random bird
+  - Centralized player damage handling with invulnerability support
 - **2026-01-23**: Enemy behavior improvements
   - Centralized enemy death handling with handleEnemyDeath function for consistent behavior
   - Hulk hunters now have proper multi-life system (loses a life, regenerates health, rage flash effect)
