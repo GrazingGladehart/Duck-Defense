@@ -1365,16 +1365,49 @@
             
             // Character-specific features
             if (charType === 'titanTurkey') {
-                // Turkey wattle
-                const wattleGeom = new THREE.SphereGeometry(0.15, 6, 6);
+                // Bigger, more muscular body
+                body.scale.set(1.2, 1.3, 1.2);
+                
+                // Turkey wattle (larger and more prominent)
+                const wattleGeom = new THREE.SphereGeometry(0.2, 6, 6);
                 const wattleMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
                 const wattle = new THREE.Mesh(wattleGeom, wattleMat);
-                wattle.scale.y = 1.5;
-                wattle.position.set(0, 0.6, 0.35);
+                wattle.scale.y = 2;
+                wattle.position.set(0, 0.55, 0.4);
                 bird.add(wattle);
                 
+                // Turkey snood (red dangly bit on beak)
+                const snoodGeom = new THREE.CylinderGeometry(0.05, 0.02, 0.2, 6);
+                const snood = new THREE.Mesh(snoodGeom, wattleMat);
+                snood.position.set(0, 0.7, 0.5);
+                snood.rotation.x = 0.3;
+                bird.add(snood);
+                
+                // Tail fan feathers
+                const tailMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                for (let i = -2; i <= 2; i++) {
+                    const featherGeom = new THREE.BoxGeometry(0.15, 0.5, 0.03);
+                    const feather = new THREE.Mesh(featherGeom, tailMat);
+                    feather.position.set(i * 0.12, 0.3, -0.5);
+                    feather.rotation.x = -0.4;
+                    feather.rotation.z = i * 0.15;
+                    bird.add(feather);
+                }
+                
+                // Shoulder pads (football style, always visible)
+                const padMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
+                const padGeom = new THREE.BoxGeometry(0.3, 0.15, 0.2);
+                const leftPad = new THREE.Mesh(padGeom, padMat);
+                leftPad.position.set(-0.55, 0.4, 0);
+                leftPad.rotation.z = -0.3;
+                bird.add(leftPad);
+                const rightPad = new THREE.Mesh(padGeom, padMat);
+                rightPad.position.set(0.55, 0.4, 0);
+                rightPad.rotation.z = 0.3;
+                bird.add(rightPad);
+                
                 // Football helmet (hidden until ability active)
-                const helmetGeom = new THREE.SphereGeometry(0.45, 8, 8);
+                const helmetGeom = new THREE.SphereGeometry(0.48, 8, 8);
                 const helmetMat = new THREE.MeshLambertMaterial({ color: 0x1E90FF });
                 const helmet = new THREE.Mesh(helmetGeom, helmetMat);
                 helmet.position.y = 0.85;
@@ -1384,10 +1417,10 @@
                 bird.userData.helmet = helmet;
                 
                 // Facemask
-                const maskGeom = new THREE.TorusGeometry(0.2, 0.02, 4, 8);
+                const maskGeom = new THREE.TorusGeometry(0.22, 0.025, 4, 8);
                 const maskMat = new THREE.MeshLambertMaterial({ color: 0xCCCCCC });
                 const mask = new THREE.Mesh(maskGeom, maskMat);
-                mask.position.set(0, 0.85, 0.4);
+                mask.position.set(0, 0.85, 0.42);
                 mask.rotation.x = Math.PI / 2;
                 mask.visible = false;
                 bird.add(mask);
@@ -1395,45 +1428,136 @@
             }
             
             if (charType === 'kungPowChicken') {
-                // Headband
-                const bandGeom = new THREE.TorusGeometry(0.38, 0.03, 4, 16);
+                // Large red headband wrapped around head
+                const bandGeom = new THREE.TorusGeometry(0.42, 0.06, 6, 16);
                 const bandMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
                 const band = new THREE.Mesh(bandGeom, bandMat);
                 band.position.y = 0.95;
                 band.rotation.x = Math.PI / 2;
                 bird.add(band);
                 
-                // Tail ribbons
-                const ribbonGeom = new THREE.BoxGeometry(0.05, 0.3, 0.02);
+                // Long tail ribbons flowing behind
+                const ribbonGeom = new THREE.BoxGeometry(0.06, 0.5, 0.02);
                 const ribbon1 = new THREE.Mesh(ribbonGeom, bandMat);
-                ribbon1.position.set(-0.3, 0.85, -0.2);
-                ribbon1.rotation.z = 0.3;
+                ribbon1.position.set(-0.25, 0.75, -0.35);
+                ribbon1.rotation.z = 0.4;
+                ribbon1.rotation.x = -0.2;
                 const ribbon2 = new THREE.Mesh(ribbonGeom, bandMat);
-                ribbon2.position.set(-0.35, 0.75, -0.2);
-                ribbon2.rotation.z = 0.5;
+                ribbon2.position.set(-0.35, 0.65, -0.35);
+                ribbon2.rotation.z = 0.6;
+                ribbon2.rotation.x = -0.3;
                 bird.add(ribbon1, ribbon2);
+                
+                // White Gi (martial arts uniform) - body wrap
+                const giMat = new THREE.MeshLambertMaterial({ color: 0xFAFAFA });
+                
+                // Gi jacket front panels (v-neck style)
+                const giPanelGeom = new THREE.BoxGeometry(0.35, 0.6, 0.1);
+                const giLeft = new THREE.Mesh(giPanelGeom, giMat);
+                giLeft.position.set(-0.2, 0.1, 0.45);
+                giLeft.rotation.y = 0.3;
+                bird.add(giLeft);
+                const giRight = new THREE.Mesh(giPanelGeom, giMat);
+                giRight.position.set(0.2, 0.1, 0.45);
+                giRight.rotation.y = -0.3;
+                bird.add(giRight);
+                
+                // Gi collar
+                const collarGeom = new THREE.BoxGeometry(0.12, 0.5, 0.08);
+                const collarLeft = new THREE.Mesh(collarGeom, giMat);
+                collarLeft.position.set(-0.15, 0.3, 0.5);
+                collarLeft.rotation.z = 0.2;
+                bird.add(collarLeft);
+                const collarRight = new THREE.Mesh(collarGeom, giMat);
+                collarRight.position.set(0.15, 0.3, 0.5);
+                collarRight.rotation.z = -0.2;
+                bird.add(collarRight);
+                
+                // Black belt around waist
+                const beltGeom = new THREE.TorusGeometry(0.55, 0.05, 4, 16);
+                const beltMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+                const belt = new THREE.Mesh(beltGeom, beltMat);
+                belt.position.y = -0.15;
+                belt.rotation.x = Math.PI / 2;
+                bird.add(belt);
+                
+                // Belt knot in front
+                const knotGeom = new THREE.BoxGeometry(0.15, 0.08, 0.1);
+                const knot = new THREE.Mesh(knotGeom, beltMat);
+                knot.position.set(0, -0.15, 0.55);
+                bird.add(knot);
+                
+                // Belt tails hanging down
+                const tailGeom = new THREE.BoxGeometry(0.06, 0.25, 0.03);
+                const beltTail1 = new THREE.Mesh(tailGeom, beltMat);
+                beltTail1.position.set(-0.08, -0.35, 0.55);
+                beltTail1.rotation.z = 0.15;
+                bird.add(beltTail1);
+                const beltTail2 = new THREE.Mesh(tailGeom, beltMat);
+                beltTail2.position.set(0.08, -0.35, 0.55);
+                beltTail2.rotation.z = -0.15;
+                bird.add(beltTail2);
             }
             
             if (charType === 'mericaMallard') {
-                // Uncle Sam hat
-                const hatBaseGeom = new THREE.CylinderGeometry(0.35, 0.35, 0.05, 16);
-                const hatBaseMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-                const hatBase = new THREE.Mesh(hatBaseGeom, hatBaseMat);
-                hatBase.position.y = 1.15;
-                bird.add(hatBase);
+                // Uncle Sam top hat with stripes
+                const hatBrimGeom = new THREE.CylinderGeometry(0.45, 0.45, 0.06, 16);
+                const hatBrimMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                const hatBrim = new THREE.Mesh(hatBrimGeom, hatBrimMat);
+                hatBrim.position.y = 1.15;
+                bird.add(hatBrim);
                 
-                const hatTopGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.4, 16);
-                const hatTopMat = new THREE.MeshLambertMaterial({ color: 0xBF0A30 });
-                const hatTop = new THREE.Mesh(hatTopGeom, hatTopMat);
-                hatTop.position.y = 1.35;
-                bird.add(hatTop);
+                // Hat body with red and white stripes
+                const redMat = new THREE.MeshLambertMaterial({ color: 0xBF0A30 });
+                const whiteMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                for (let i = 0; i < 5; i++) {
+                    const stripeGeom = new THREE.CylinderGeometry(0.28, 0.28, 0.1, 16);
+                    const stripe = new THREE.Mesh(stripeGeom, i % 2 === 0 ? redMat : whiteMat);
+                    stripe.position.y = 1.23 + i * 0.1;
+                    bird.add(stripe);
+                }
                 
-                // Star on hat
-                const starGeom = new THREE.SphereGeometry(0.08, 4, 4);
+                // Blue band with stars at top
+                const blueBandGeom = new THREE.CylinderGeometry(0.29, 0.29, 0.15, 16);
+                const blueMat = new THREE.MeshLambertMaterial({ color: 0x002868 });
+                const blueBand = new THREE.Mesh(blueBandGeom, blueMat);
+                blueBand.position.y = 1.65;
+                bird.add(blueBand);
+                
+                // Stars around the blue band
                 const starMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-                const star = new THREE.Mesh(starGeom, starMat);
-                star.position.set(0, 1.35, 0.25);
-                bird.add(star);
+                for (let i = 0; i < 5; i++) {
+                    const starGeom = new THREE.SphereGeometry(0.04, 4, 4);
+                    const star = new THREE.Mesh(starGeom, starMat);
+                    const angle = (i / 5) * Math.PI * 2;
+                    star.position.set(Math.sin(angle) * 0.3, 1.65, Math.cos(angle) * 0.3);
+                    bird.add(star);
+                }
+                
+                // American flag cape
+                const capeMat = new THREE.MeshLambertMaterial({ color: 0xBF0A30, side: THREE.DoubleSide });
+                const capeGeom = new THREE.PlaneGeometry(0.8, 0.6);
+                const cape = new THREE.Mesh(capeGeom, capeMat);
+                cape.position.set(0, 0.1, -0.5);
+                cape.rotation.x = 0.2;
+                bird.add(cape);
+                
+                // Blue corner on cape
+                const capeBlueGeom = new THREE.PlaneGeometry(0.3, 0.25);
+                const capeBlue = new THREE.Mesh(capeBlueGeom, blueMat);
+                capeBlue.position.set(-0.25, 0.25, -0.49);
+                capeBlue.rotation.x = 0.2;
+                bird.add(capeBlue);
+                
+                // Bow tie
+                const bowMat = new THREE.MeshLambertMaterial({ color: 0xBF0A30 });
+                const bowGeom = new THREE.BoxGeometry(0.25, 0.1, 0.08);
+                const bow = new THREE.Mesh(bowGeom, bowMat);
+                bow.position.set(0, 0.5, 0.5);
+                bird.add(bow);
+                const bowKnot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), blueMat);
+                bowKnot.position.set(0, 0.5, 0.55);
+                bird.add(bowKnot);
             }
             
             if (charType === 'chick7') {
