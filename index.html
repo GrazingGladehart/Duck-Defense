@@ -178,7 +178,7 @@
 </head>
 <body>
     <div id="ui">
-        <div>Score: <span id="score">0</span></div>
+        <div>Kills: <span id="kills">0</span></div>
         <div>Lives: <span id="lives">3</span></div>
         <div>Time: <span id="time">0</span>s</div>
     </div>
@@ -215,7 +215,7 @@
     <script>
         // ==================== GAME STATE ====================
         const gameState = {
-            score: 0,
+            kills: 0,
             lives: 3,
             currentWeapon: 'fists',
             isGameOver: false,
@@ -231,8 +231,8 @@
             fists: { damage: 10, range: 3, cooldown: 500, type: 'melee' },
             sword: { damage: 30, range: 5, cooldown: 400, type: 'melee' },
             hammer: { damage: 50, range: 4, cooldown: 800, type: 'melee' },
-            rifle: { damage: 40, range: 100, cooldown: 600, type: 'projectile', speed: 1.2 },
-            machineGun: { damage: 15, range: 20, cooldown: 150, type: 'projectile', speed: 1.0 },
+            rifle: { damage: 80, range: 100, cooldown: 600, type: 'projectile', speed: 1.2 },
+            machineGun: { damage: 50, range: 20, cooldown: 150, type: 'projectile', speed: 1.0 },
             catapult: { damage: 60, range: 40, cooldown: 1500, type: 'arc', speed: 0.3 },
             cannon: { damage: 100, range: 50, cooldown: 2000, type: 'projectile', speed: 0.5, aoe: 5 }
         };
@@ -794,7 +794,7 @@
             lookAngle: 0,
             isJumping: false,
             jumpsUsed: 0,
-            maxJumps: 3,
+            maxJumps: 2,
             canAttack: true,
             lastAttackTime: 0,
             weaponModel: null,
@@ -1227,8 +1227,8 @@
         function updatePlayer(delta) {
             if (gameState.isPaused || gameState.isGameOver) return;
 
-            const baseSpeed = 0.05; // Slower base speed
-            const jumpForce = 0.75; // Increased jump force
+            const baseSpeed = 0.04; // Slower base speed
+            const jumpForce = 1.25; // Increased jump force
             const gravity = -0.04;
 
             // Get speed modifier based on terrain
@@ -1440,7 +1440,7 @@
             }
             
             // Better hitbox detection - larger multipliers and more forgiving angles
-            let hitboxMultiplier = 1.5; // Base multiplier for all melee
+            let hitboxMultiplier = 2.5; // Base multiplier for all melee
             if (gameState.currentWeapon === 'sword') hitboxMultiplier = 1.6;
             if (gameState.currentWeapon === 'hammer') hitboxMultiplier = 1.4;
             
@@ -1465,7 +1465,7 @@
                             }
                             scene.remove(enemy.mesh);
                             enemies.splice(idx, 1);
-                            gameState.score += 100;
+                            gameState.kills ++;
                             updateUI();
                         }
                     }
@@ -1579,6 +1579,46 @@
         }
 
         function updateProjectiles(delta) {
+
+            /*if (proj.fromPlayer) {
+            enemies.forEach((enemy, idx) => {
+            const dist = proj.mesh.position.distanceTo(enemy.position);
+            const alreadyHit = proj.hitEnemies && proj.hitEnemies.includes(enemy);
+
+
+            // Adjustable hit radius by weapon type
+            let hitRadius = 1.7;
+            if (gameState.currentWeapon === 'rifle') hitRadius = 2.2;
+            if (gameState.currentWeapon === 'machineGun') hitRadius = 1.5;
+
+
+            if (dist < hitRadius && !alreadyHit) {
+            enemy.health -= proj.damage;
+
+
+            if (proj.canPierce) {
+            proj.hitEnemies.push(enemy);
+            }
+
+
+            if (enemy.health <= 0) {
+            for (let i = 0; i < 15; i++) {
+            createBloodParticle(enemy.position.clone());
+            }
+            scene.remove(enemy.mesh);
+            enemies.splice(idx, 1);
+            gameState.kills++;
+            updateUI();
+            }
+
+
+            if (!proj.canPierce) {
+            proj.lifetime = 0;
+            }
+            }
+            });
+            }*/
+            
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const proj = projectiles[i];
                 
@@ -1630,7 +1670,7 @@
                                 }
                                 scene.remove(enemy.mesh);
                                 enemies.splice(idx, 1);
-                                gameState.score += 100;
+                                gameState.kills ++;
                                 updateUI();
                             }
                             
@@ -1730,7 +1770,7 @@
         }
 
         function updateUI() {
-            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('kills').textContent = gameState.kills;
             document.getElementById('lives').textContent = gameState.lives;
             document.getElementById('time').textContent = Math.floor(gameState.gameTime);
             document.getElementById('current-weapon').textContent = 
@@ -1739,12 +1779,12 @@
 
         function gameOver() {
             gameState.isGameOver = true;
-            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('final-score').textContent = gameState.kills*100+gameState.gameTime;
             document.getElementById('game-over').style.display = 'block';
         }
 
         function resetGame() {
-            gameState.score = 0;
+            gameState.kills = 0;
             gameState.lives = 3;
             gameState.currentWeapon = 'fists';
             gameState.isGameOver = false;
@@ -1827,7 +1867,7 @@
             document.getElementById('instructions').style.display = 'block';
             
             // Reset game state without showing game over
-            gameState.score = 0;
+            gameState.kills = 0;
             gameState.lives = 3;
             gameState.currentWeapon = 'fists';
             gameState.enemySpawnRate = 3000;
