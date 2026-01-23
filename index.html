@@ -1522,9 +1522,128 @@
         const enemies = [];
         const bloodParticles = [];
 
-        function createHunter() {
+        function createHunter(type = 'basic') {
             const hunter = new THREE.Group();
+            hunter.userData.type = type;
             
+            if (type === 'hulk') {
+                // Hulk Hunter - Huge, green, carries a club
+                const bodyGeom = new THREE.CylinderGeometry(0.8, 0.9, 2.5, 8);
+                const bodyMat = new THREE.MeshLambertMaterial({ color: 0x556B2F }); // Olive green
+                const body = new THREE.Mesh(bodyGeom, bodyMat);
+                body.position.y = 1.25;
+                body.castShadow = true;
+                hunter.add(body);
+                
+                // Massive head
+                const headGeom = new THREE.SphereGeometry(0.6, 8, 8);
+                const headMat = new THREE.MeshLambertMaterial({ color: 0x8FBC8F }); // Dark sea green
+                const head = new THREE.Mesh(headGeom, headMat);
+                head.position.y = 3.0;
+                head.castShadow = true;
+                hunter.add(head);
+                
+                // Angry eyes
+                const eyeGeom = new THREE.SphereGeometry(0.12, 6, 6);
+                const eyeMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+                const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
+                leftEye.position.set(-0.2, 3.1, 0.5);
+                const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
+                rightEye.position.set(0.2, 3.1, 0.5);
+                hunter.add(leftEye, rightEye);
+                
+                // Big muscular arms
+                const armGeom = new THREE.CylinderGeometry(0.25, 0.3, 1.5, 6);
+                const armMat = new THREE.MeshLambertMaterial({ color: 0x556B2F });
+                const leftArm = new THREE.Mesh(armGeom, armMat);
+                leftArm.position.set(-1.0, 1.8, 0);
+                leftArm.rotation.z = Math.PI / 4;
+                const rightArm = new THREE.Mesh(armGeom, armMat);
+                rightArm.position.set(1.0, 1.8, 0);
+                rightArm.rotation.z = -Math.PI / 4;
+                hunter.add(leftArm, rightArm);
+                
+                // Giant club
+                const clubHandleGeom = new THREE.CylinderGeometry(0.15, 0.12, 2.0, 6);
+                const clubMat = new THREE.MeshLambertMaterial({ color: 0x4A3728 });
+                const clubHandle = new THREE.Mesh(clubHandleGeom, clubMat);
+                clubHandle.position.set(1.5, 2.0, 0);
+                clubHandle.rotation.z = -Math.PI / 3;
+                hunter.add(clubHandle);
+                
+                const clubHeadGeom = new THREE.SphereGeometry(0.5, 8, 8);
+                const clubHead = new THREE.Mesh(clubHeadGeom, clubMat);
+                clubHead.position.set(2.2, 2.8, 0);
+                clubHead.scale.set(1.2, 0.8, 0.8);
+                hunter.add(clubHead);
+                
+                // Spikes on club
+                for (let i = 0; i < 6; i++) {
+                    const spikeGeom = new THREE.ConeGeometry(0.1, 0.3, 4);
+                    const spikeMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
+                    const spike = new THREE.Mesh(spikeGeom, spikeMat);
+                    const angle = (i / 6) * Math.PI * 2;
+                    spike.position.set(
+                        2.2 + Math.cos(angle) * 0.4,
+                        2.8 + Math.sin(angle) * 0.3,
+                        Math.sin(angle) * 0.4
+                    );
+                    spike.rotation.z = angle;
+                    hunter.add(spike);
+                }
+                
+                return hunter;
+            }
+            
+            if (type === 'catapult') {
+                // Catapult Hunter - Carries a portable catapult
+                const bodyGeom = new THREE.CylinderGeometry(0.35, 0.35, 1.4, 6);
+                const bodyMat = new THREE.MeshLambertMaterial({ color: 0x8B0000 }); // Dark red
+                const body = new THREE.Mesh(bodyGeom, bodyMat);
+                body.position.y = 0.7;
+                body.castShadow = true;
+                hunter.add(body);
+                
+                const headGeom = new THREE.SphereGeometry(0.3, 8, 8);
+                const headMat = new THREE.MeshLambertMaterial({ color: 0xFFDBAC });
+                const head = new THREE.Mesh(headGeom, headMat);
+                head.position.y = 1.6;
+                head.castShadow = true;
+                hunter.add(head);
+                
+                // Military helmet
+                const helmetGeom = new THREE.SphereGeometry(0.35, 8, 8);
+                const helmetMat = new THREE.MeshLambertMaterial({ color: 0x2F4F4F });
+                const helmet = new THREE.Mesh(helmetGeom, helmetMat);
+                helmet.position.y = 1.75;
+                helmet.scale.y = 0.6;
+                hunter.add(helmet);
+                
+                // Portable catapult on back
+                const catBaseGeom = new THREE.BoxGeometry(0.6, 0.2, 0.4);
+                const catMat = new THREE.MeshLambertMaterial({ color: 0x654321 });
+                const catBase = new THREE.Mesh(catBaseGeom, catMat);
+                catBase.position.set(0, 1.2, -0.4);
+                hunter.add(catBase);
+                
+                const catArmGeom = new THREE.BoxGeometry(0.1, 0.8, 0.1);
+                const catArm = new THREE.Mesh(catArmGeom, catMat);
+                catArm.position.set(0, 1.6, -0.4);
+                catArm.rotation.x = -0.3;
+                hunter.add(catArm);
+                hunter.userData.catapultArm = catArm;
+                
+                // Ammo pouch
+                const pouchGeom = new THREE.SphereGeometry(0.2, 6, 6);
+                const pouchMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                const pouch = new THREE.Mesh(pouchGeom, pouchMat);
+                pouch.position.set(0.5, 0.5, 0);
+                hunter.add(pouch);
+                
+                return hunter;
+            }
+            
+            // Basic hunter (default)
             const bodyGeom = new THREE.CylinderGeometry(0.3, 0.3, 1.2, 6);
             const bodyMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
             const body = new THREE.Mesh(bodyGeom, bodyMat);
@@ -1783,12 +1902,57 @@
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
+            // Determine enemy type based on game time
+            let enemyType = 'basic';
+            const gameMinutes = gameState.gameTime / 60;
+            
+            if (gameMinutes >= 4) {
+                // After 4 minutes: can spawn hulk hunters (20% chance)
+                const roll = Math.random();
+                if (roll < 0.2) {
+                    enemyType = 'hulk';
+                } else if (roll < 0.5) {
+                    enemyType = 'catapult';
+                }
+            } else if (gameMinutes >= 2) {
+                // After 2 minutes: can spawn catapult hunters (30% chance)
+                if (Math.random() < 0.3) {
+                    enemyType = 'catapult';
+                }
+            }
+            
+            // Configure enemy stats based on type
+            let health, shootCooldown, lives, yOffset;
+            switch (enemyType) {
+                case 'hulk':
+                    health = 200;
+                    shootCooldown = 0; // Melee only
+                    lives = 3;
+                    yOffset = 1.5;
+                    break;
+                case 'catapult':
+                    health = 80;
+                    shootCooldown = 3500; // Slower but more powerful
+                    lives = 1;
+                    yOffset = 1;
+                    break;
+                default: // basic
+                    health = 50;
+                    shootCooldown = 2000;
+                    lives = 1;
+                    yOffset = 1;
+            }
+            
             const enemy = {
-                mesh: createHunter(),
-                position: new THREE.Vector3(x, getTerrainHeight(x, z) + 1, z),
-                health: 50,
+                mesh: createHunter(enemyType),
+                position: new THREE.Vector3(x, getTerrainHeight(x, z) + yOffset, z),
+                health: health,
+                maxHealth: health,
                 lastShootTime: 0,
-                shootCooldown: 2000
+                shootCooldown: shootCooldown,
+                type: enemyType,
+                lives: lives,
+                lastMeleeTime: 0
             };
             
             enemy.mesh.position.copy(enemy.position);
