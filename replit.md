@@ -19,8 +19,9 @@ The game features a full menu system:
 - **MOUSE** - Aim direction  
 - **SPACE** - Jump (multi-jump varies by character!)
 - **HOLD SPACE (while falling)** - Glide with wings outstretched
-- **LEFT CLICK** - Attack/Shoot
+- **LEFT CLICK** - Attack/Shoot (also fires tank cannon when driving)
 - **Q** - Activate special ability (character-specific)
+- **G** - Throw grenade (3 second cooldown)
 - **E** - Enter/Exit vehicles
 - **Collect weapons** dropped by slain hunters
 - **Steal hunter trucks** after eliminating the driver
@@ -61,9 +62,18 @@ Weapons are now dropped by slain hunters (20% drop chance) instead of spawning r
 
 ### Vehicles
 - **Hunter Trucks** - Spawn every 15-25 seconds with armed drivers
+- **Tanks** - Spawn after 6 minutes (late game), heavily armored with explosive shells
 - Kill the driver to hijack the vehicle
 - Drive with W/A/S/D, run over enemies for kills
+- **Tanks fire explosive shells** - Click to shoot when driving a tank
 - Press E to enter/exit vehicles
+
+### Grenades
+- Press **G** to throw a grenade in the direction you're facing
+- Grenades bounce and explode after a short fuse or 3 bounces
+- 8-unit explosion radius deals up to 80 damage
+- Damages enemies and tanks (tanks take 50% grenade damage)
+- 3 second cooldown between throws
 
 ### Statistics Tracking
 - **Score History Graph** - Visual display of your scores over time
@@ -153,6 +163,12 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-27**: Tanks and grenades
+  - Added tanks that spawn after 6 minutes with armored drivers
+  - Tanks have 300 health and fire explosive shells at players
+  - Players can hijack tanks and fire explosive shells by clicking
+  - Added grenade throw system (G key) with 3 second cooldown
+  - Grenades bounce, explode after fuse, deal AOE damage with knockback
 - **2026-01-27**: In-game shop system
   - Added coin currency earned from defeating hunters (5/10/15 based on enemy type)
   - Duck Mart shop for purchasing extra lives, weapons, and premium characters

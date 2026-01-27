@@ -2615,8 +2615,78 @@
             return truck;
         }
 
+        function createTank() {
+            const tank = new THREE.Group();
+            
+            // Tank body - lower, wider, armored
+            const hullGeom = new THREE.BoxGeometry(4, 1.5, 6);
+            const hullMat = new THREE.MeshLambertMaterial({ color: 0x3d4a3d });
+            const hull = new THREE.Mesh(hullGeom, hullMat);
+            hull.position.y = 1.2;
+            hull.castShadow = true;
+            tank.add(hull);
+            
+            // Armor plating on sides
+            const armorGeom = new THREE.BoxGeometry(0.3, 1.2, 5);
+            const armorMat = new THREE.MeshLambertMaterial({ color: 0x2a352a });
+            [-2.1, 2.1].forEach(x => {
+                const armor = new THREE.Mesh(armorGeom, armorMat);
+                armor.position.set(x, 1.2, 0);
+                tank.add(armor);
+            });
+            
+            // Turret base
+            const turretBaseGeom = new THREE.CylinderGeometry(1.5, 1.8, 1, 12);
+            const turretMat = new THREE.MeshLambertMaterial({ color: 0x4a5a4a });
+            const turretBase = new THREE.Mesh(turretBaseGeom, turretMat);
+            turretBase.position.set(0, 2.5, -0.5);
+            turretBase.castShadow = true;
+            tank.add(turretBase);
+            tank.turretBase = turretBase;
+            
+            // Cannon barrel
+            const barrelGeom = new THREE.CylinderGeometry(0.25, 0.3, 4, 8);
+            const barrelMat = new THREE.MeshLambertMaterial({ color: 0x2a2a2a });
+            const barrel = new THREE.Mesh(barrelGeom, barrelMat);
+            barrel.rotation.x = Math.PI / 2;
+            barrel.position.set(0, 2.5, -3);
+            tank.add(barrel);
+            tank.barrel = barrel;
+            
+            // Tracks (wide treads)
+            const trackGeom = new THREE.BoxGeometry(0.8, 0.8, 6.5);
+            const trackMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+            [-2.2, 2.2].forEach(x => {
+                const track = new THREE.Mesh(trackGeom, trackMat);
+                track.position.set(x, 0.5, 0);
+                tank.add(track);
+            });
+            
+            // Track wheels
+            const wheelGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.9, 8);
+            const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+            [-2.2, 2.2].forEach(x => {
+                [-2.5, -1, 0.5, 2].forEach(z => {
+                    const wheel = new THREE.Mesh(wheelGeom, wheelMat);
+                    wheel.rotation.z = Math.PI / 2;
+                    wheel.position.set(x, 0.5, z);
+                    tank.add(wheel);
+                });
+            });
+            
+            // Hatch on top
+            const hatchGeom = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 8);
+            const hatchMat = new THREE.MeshLambertMaterial({ color: 0x3a3a3a });
+            const hatch = new THREE.Mesh(hatchGeom, hatchMat);
+            hatch.position.set(0, 3.1, -0.5);
+            tank.add(hatch);
+            
+            return tank;
+        }
+
         const vehicles = [];
         let lastTruckSpawnTime = Date.now();
+        let lastTankSpawnTime = Date.now();
 
         function spawnTruckWithDriver() {
             const angle = Math.random() * Math.PI * 2;
@@ -2648,6 +2718,176 @@
                 }
             };
             vehicles.push(vehicle);
+        }
+
+        function spawnTankWithDriver() {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 50;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+            const terrainY = getTerrainHeight(x, z);
+            
+            const tank = createTank();
+            tank.position.set(x, terrainY, z);
+            tank.rotation.y = angle + Math.PI;
+            scene.add(tank);
+            
+            const driver = createHunter();
+            driver.position.set(0, 3.5, -0.5);
+            driver.scale.set(0.8, 0.8, 0.8);
+            tank.add(driver);
+            
+            const vehicle = {
+                mesh: tank,
+                position: new THREE.Vector3(x, terrainY, z),
+                rotation: angle + Math.PI,
+                velocity: new THREE.Vector3(),
+                hasDriver: true,
+                isTank: true,
+                health: 300,
+                maxHealth: 300,
+                turretAngle: 0,
+                driver: {
+                    mesh: driver,
+                    health: 150,
+                    lastShootTime: 0,
+                    shootCooldown: 2500
+                }
+            };
+            vehicles.push(vehicle);
+        }
+
+        // Grenade system
+        const grenades = [];
+        let lastGrenadeTime = 0;
+        const grenadeCooldown = 3000;
+        
+        function throwGrenade() {
+            const now = Date.now();
+            if (now - lastGrenadeTime < grenadeCooldown) return;
+            if (gameState.vehicle) return; // Can't throw from vehicle
+            
+            lastGrenadeTime = now;
+            
+            // Create grenade mesh
+            const grenadeGeom = new THREE.SphereGeometry(0.2, 8, 8);
+            const grenadeMat = new THREE.MeshLambertMaterial({ color: 0x3a4a3a });
+            const grenade = new THREE.Mesh(grenadeGeom, grenadeMat);
+            
+            // Add pin/handle detail
+            const handleGeom = new THREE.BoxGeometry(0.05, 0.15, 0.05);
+            const handleMat = new THREE.MeshLambertMaterial({ color: 0x8a8a8a });
+            const handle = new THREE.Mesh(handleGeom, handleMat);
+            handle.position.y = 0.2;
+            grenade.add(handle);
+            
+            // Start position (player's offhand)
+            const startPos = player.position.clone();
+            startPos.y += 1.5;
+            grenade.position.copy(startPos);
+            scene.add(grenade);
+            
+            // Calculate throw direction (where player is looking)
+            const throwDir = new THREE.Vector3(0, 0, -1);
+            throwDir.applyQuaternion(player.mesh.quaternion);
+            throwDir.y = 0.4; // Arc upward
+            throwDir.normalize();
+            
+            grenades.push({
+                mesh: grenade,
+                position: startPos.clone(),
+                velocity: throwDir.multiplyScalar(0.5),
+                lifetime: 90,
+                bounces: 0
+            });
+        }
+        
+        function updateGrenades() {
+            for (let i = grenades.length - 1; i >= 0; i--) {
+                const gren = grenades[i];
+                
+                // Apply gravity
+                gren.velocity.y -= 0.015;
+                
+                // Update position
+                gren.position.add(gren.velocity);
+                gren.mesh.position.copy(gren.position);
+                gren.mesh.rotation.x += 0.2;
+                gren.mesh.rotation.z += 0.1;
+                
+                // Check terrain collision (bounce)
+                const terrainY = getTerrainHeight(gren.position.x, gren.position.z);
+                if (gren.position.y < terrainY + 0.2) {
+                    gren.position.y = terrainY + 0.2;
+                    gren.velocity.y = Math.abs(gren.velocity.y) * 0.4;
+                    gren.velocity.x *= 0.7;
+                    gren.velocity.z *= 0.7;
+                    gren.bounces++;
+                }
+                
+                gren.lifetime--;
+                
+                // Explode after timer or enough bounces
+                if (gren.lifetime <= 0 || gren.bounces >= 3) {
+                    explodeGrenade(gren);
+                    scene.remove(gren.mesh);
+                    grenades.splice(i, 1);
+                }
+            }
+        }
+        
+        function explodeGrenade(gren) {
+            const explosionRadius = 8;
+            const damage = 80;
+            
+            // Explosion particles
+            for (let j = 0; j < 20; j++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.3, 6, 6),
+                    new THREE.MeshLambertMaterial({ color: j % 2 === 0 ? 0xff6600 : 0x8B0000 })
+                );
+                particle.position.copy(gren.position);
+                scene.add(particle);
+                const vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.5,
+                    Math.random() * 0.4,
+                    (Math.random() - 0.5) * 0.5
+                );
+                bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 30 });
+            }
+            
+            // Damage enemies in radius
+            for (let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
+                const enemy = enemies[eIdx];
+                const dist = gren.position.distanceTo(enemy.position);
+                if (dist < explosionRadius) {
+                    const dmg = Math.ceil(damage * (1 - dist / explosionRadius));
+                    enemy.health -= dmg;
+                    
+                    // Knockback
+                    const knockDir = enemy.position.clone().sub(gren.position).normalize();
+                    enemy.position.add(knockDir.multiplyScalar(2));
+                    
+                    if (enemy.health <= 0) {
+                        handleEnemyDeath(enemy, eIdx, 'grenade');
+                    } else {
+                        // Blood splash
+                        for (let b = 0; b < 5; b++) {
+                            createBloodParticle(enemy.position.clone());
+                        }
+                    }
+                }
+            }
+            
+            // Damage vehicles in radius
+            vehicles.forEach(vehicle => {
+                if (vehicle.isTank && vehicle.hasDriver) {
+                    const dist = gren.position.distanceTo(vehicle.position);
+                    if (dist < explosionRadius) {
+                        vehicle.health -= Math.ceil(damage * 0.5 * (1 - dist / explosionRadius));
+                    }
+                }
+            });
         }
 
         function spawnEnemy() {
@@ -2827,6 +3067,61 @@
                 damage: 1,
                 lifetime: 150,
                 fromPlayer: false
+            });
+        }
+        
+        function createTankShell(start, direction, vehicle) {
+            const geom = new THREE.CylinderGeometry(0.15, 0.2, 0.8, 8);
+            const mat = new THREE.MeshLambertMaterial({ color: 0x4a4a4a });
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.rotation.x = Math.PI / 2;
+            mesh.position.copy(start);
+            mesh.castShadow = true;
+            scene.add(mesh);
+            
+            // Add glowing tip
+            const tipGeom = new THREE.SphereGeometry(0.12, 6, 6);
+            const tipMat = new THREE.MeshBasicMaterial({ color: 0xff4400 });
+            const tip = new THREE.Mesh(tipGeom, tipMat);
+            tip.position.z = 0.5;
+            mesh.add(tip);
+            
+            projectiles.push({
+                mesh,
+                velocity: direction.clone().multiplyScalar(0.6),
+                damage: 3,
+                lifetime: 180,
+                fromPlayer: false,
+                isExplosive: true,
+                explosionRadius: 6
+            });
+        }
+        
+        function createPlayerTankShell(start, direction) {
+            const geom = new THREE.CylinderGeometry(0.2, 0.25, 1, 8);
+            const mat = new THREE.MeshLambertMaterial({ color: 0x6a6a6a });
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.rotation.x = Math.PI / 2;
+            mesh.position.copy(start);
+            mesh.castShadow = true;
+            scene.add(mesh);
+            
+            // Add glowing tip
+            const tipGeom = new THREE.SphereGeometry(0.15, 6, 6);
+            const tipMat = new THREE.MeshBasicMaterial({ color: 0x00aaff });
+            const tip = new THREE.Mesh(tipGeom, tipMat);
+            tip.position.z = 0.6;
+            mesh.add(tip);
+            
+            projectiles.push({
+                mesh,
+                velocity: direction.clone().multiplyScalar(0.7),
+                damage: 100,
+                lifetime: 200,
+                fromPlayer: true,
+                isExplosive: true,
+                explosionRadius: 8,
+                weaponType: 'tankCannon'
             });
         }
         
@@ -3367,6 +3662,10 @@
             // Q key for ability activation
             if (e.key.toLowerCase() === 'q' && gameState.playing) {
                 activateAbility();
+            }
+            // G key for grenade throw
+            if (e.key.toLowerCase() === 'g' && gameState.playing && !gameState.isGameOver) {
+                throwGrenade();
             }
         });
         window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
@@ -4046,9 +4345,16 @@
             }
             
             // Spawn trucks occasionally (every 15-25 seconds)
-            if (now - lastTruckSpawnTime > 15000 + Math.random() * 10000 && vehicles.length < 3) {
+            if (now - lastTruckSpawnTime > 15000 + Math.random() * 10000 && vehicles.length < 5) {
                 lastTruckSpawnTime = now;
                 spawnTruckWithDriver();
+            }
+            
+            // Spawn tanks in late game (after 6 minutes, every 30-45 seconds)
+            const gameMinutes = gameState.gameTime / 60;
+            if (gameMinutes >= 6 && now - lastTankSpawnTime > 30000 + Math.random() * 15000 && vehicles.filter(v => v.isTank).length < 2) {
+                lastTankSpawnTime = now;
+                spawnTankWithDriver();
             }
         }
 
@@ -4103,6 +4409,18 @@
                     player.position.y += 3;
                     player.mesh.position.copy(player.position);
                     player.mesh.visible = false;
+                    
+                    // Tank shooting with click
+                    if (vehicle.isTank && mouseDown && now - (vehicle.lastPlayerShot || 0) > 1500) {
+                        vehicle.lastPlayerShot = now;
+                        const shootDir = new THREE.Vector3(0, 0, -1);
+                        shootDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicle.rotation);
+                        const start = vehicle.position.clone();
+                        start.y += 2.5;
+                        start.x -= Math.sin(vehicle.rotation) * 3;
+                        start.z -= Math.cos(vehicle.rotation) * 3;
+                        createPlayerTankShell(start, shootDir);
+                    }
                     
                     // Run over enemies!
                     for (let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
@@ -4162,7 +4480,13 @@
                         const shootDir = toPlayer.normalize();
                         const start = vehicle.position.clone();
                         start.y += 3;
-                        createEnemyProjectile(start, shootDir);
+                        
+                        if (vehicle.isTank) {
+                            // Tank fires explosive shell
+                            createTankShell(start, shootDir, vehicle);
+                        } else {
+                            createEnemyProjectile(start, shootDir);
+                        }
                     }
                 } else {
                     // Empty vehicle - player can enter with E
@@ -4817,7 +5141,13 @@
             vehicles.length = 0;
             gameState.vehicle = null;
             lastTruckSpawnTime = Date.now();
+            lastTankSpawnTime = Date.now();
             player.mesh.visible = true;
+            
+            // Clear grenades
+            grenades.forEach(g => scene.remove(g.mesh));
+            grenades.length = 0;
+            lastGrenadeTime = 0;
             
             // Respawn alligators
             for (let i = 0; i < 8; i++) {
@@ -5315,6 +5645,7 @@
             updateAlligators(delta);
             updateVehicles(delta);
             updateProjectiles(delta);
+            updateGrenades();
             updateBloodParticles(delta);
             updateWindStreaks(delta);
             updatePickups(delta);
