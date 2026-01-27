@@ -16,24 +16,33 @@ The game features a full menu system:
 ## How to Play
 - **W/A/S/D** - Move forward/left/back/right
 - **MOUSE** - Aim direction  
-- **SPACE** - Jump (press twice for double jump with wing flapping!)
+- **SPACE** - Jump (multi-jump varies by character!)
+- **HOLD SPACE (while falling)** - Glide with wings outstretched
 - **LEFT CLICK** - Attack/Shoot
 - **Q** - Activate special ability (character-specific)
 - **E** - Enter/Exit vehicles
-- **Collect weapons** to increase firepower against hunters
+- **Collect weapons** dropped by slain hunters
 - **Steal hunter trucks** after eliminating the driver
 - **Survive as long as possible!**
 
 ## Game Features
 
 ### Movement & Combat
-- **Double Jump**: Jump twice in mid-air with animated wing flapping
+- **Character-Specific Jumps**: Each bird has different jump counts
+  - Titan Turkey: 1 jump (heavy)
+  - Duck, Merica Mallard, Loonatic: 2 jumps
+  - Chick 7: 3 jumps
+  - Kung Pow Chicken: 4 jumps (most agile!)
+  - Eggy Surprise: 1 jump (can't fly, it's an egg!)
+- **Gliding**: Hold SPACE while falling to glide with wings outstretched
+- **Chick 7's 67 Wing Pattern**: Unique wing animation when jumping
 - **Enhanced Melee Combat**: 
   - Sword performs wide arc swing animation with improved hitbox
   - Hammer delivers powerful vertical chopping strikes
 - **Improved Hitboxes**: Sword has 1.3x range multiplier for better arc coverage
 
 ### Weapons
+Weapons are now dropped by slain hunters (20% drop chance) instead of spawning randomly!
 - **Fists** - Basic melee
 - **Sword** - Enhanced with decorative crossguard, pommel, and blade edge. Wide sweeping attacks
 - **Hammer** - Larger head, longer handle, vertical chopping animation
@@ -121,6 +130,12 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-27**: Movement and weapon improvements
+  - Character-specific jump counts (Titan Turkey: 1, Kung Pow Chicken: 4, etc.)
+  - Added gliding mechanic - hold SPACE while falling to glide
+  - Chick 7 uses unique 67 wing pattern when jumping
+  - Weapons now drop from slain hunters (20% chance) instead of spawning randomly
+  - Enhanced visual appearances for all bird variants
 - **2026-01-23**: New bird variants
   - Added Chick 7 with 67 Windy Wing tornado special (pushes enemies, invulnerable)
   - Added Loonatic berserker loon with 80% weapon recharge boost

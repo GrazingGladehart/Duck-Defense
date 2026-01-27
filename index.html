@@ -783,29 +783,32 @@
                 abilityCooldown: 0,
                 special: null,
                 specialName: 'None',
-                orbColor: 0xFFFF00
+                orbColor: 0xFFFF00,
+                maxJumps: 2
             },
             titanTurkey: {
                 name: 'Titan Turkey',
-                description: 'Helmet Charge (Q) + Turkey Stomp special!',
+                description: 'Helmet Charge (Q) + Turkey Stomp special! Heavy - 1 jump only.',
                 colors: { body: 0x8B4513, head: 0xCC3333, beak: 0xFFAA00, wing: 0x6B3513 },
                 ability: 'helmetCharge',
                 abilityCooldown: 15000,
                 abilityDuration: 10000,
                 special: 'turkeyStomp',
                 specialName: 'Turkey Stomp',
-                orbColor: 0xFF6600
+                orbColor: 0xFF6600,
+                maxJumps: 1
             },
             kungPowChicken: {
                 name: 'Kung Pow Chicken',
-                description: 'Martial Arts (Q) + Ninja Vanish special!',
+                description: 'Martial Arts (Q) + Ninja Vanish special! Agile - 4 jumps!',
                 colors: { body: 0xFFFFFF, head: 0xFFFFFF, beak: 0xFFCC00, wing: 0xEEEEEE },
                 ability: 'martialArts',
                 abilityCooldown: 8000,
                 abilityDuration: 5000,
                 special: 'ninjaVanish',
                 specialName: 'Ninja Vanish',
-                orbColor: 0x9400D3
+                orbColor: 0x9400D3,
+                maxJumps: 4
             },
             mericaMallard: {
                 name: 'Merica Mallard',
@@ -816,17 +819,19 @@
                 abilityDuration: 0,
                 special: 'freedomBombs',
                 specialName: 'Freedom Bombs',
-                orbColor: 0xFFD700
+                orbColor: 0xFFD700,
+                maxJumps: 2
             },
             chick7: {
                 name: 'Chick 7',
-                description: '67 Windy Wing tornado attack! Invulnerable during special!',
+                description: '67 Windy Wing tornado attack! Invulnerable during special! 3 jumps!',
                 colors: { body: 0xFFEB3B, head: 0xFFEB3B, beak: 0xFF9800, wing: 0xFFC107 },
                 ability: null,
                 abilityCooldown: 0,
                 special: 'windyWing67',
                 specialName: '67 Windy Wing',
-                orbColor: 0x00BCD4
+                orbColor: 0x00BCD4,
+                maxJumps: 3
             },
             loonatic: {
                 name: 'Loonatic',
@@ -836,7 +841,8 @@
                 abilityCooldown: 0,
                 special: 'berserkerRage',
                 specialName: 'Berserker Rage',
-                orbColor: 0xFF0000
+                orbColor: 0xFF0000,
+                maxJumps: 2
             },
             eggySurprise: {
                 name: 'Eggy Surprise',
@@ -847,7 +853,8 @@
                 special: null,
                 specialName: 'Eggsplosion',
                 orbColor: 0xFFD700,
-                isEgg: true
+                isEgg: true,
+                maxJumps: 1
             }
         };
         
@@ -1816,11 +1823,13 @@
             lookAngle: 0,
             isJumping: false,
             jumpsUsed: 0,
-            maxJumps: 2,
+            maxJumps: characterConfig[gameSettings.character].maxJumps || 2,
             canAttack: true,
             lastAttackTime: 0,
             weaponModel: null,
             wingFlapTime: 0,
+            wing67Time: 0,
+            isGliding: false,
             bloodDripCounter: 0,
             // Ability system (Q key - cooldown based)
             abilityActive: false,
@@ -2390,6 +2399,13 @@
             gameState.kills++;
             trackKill(killSource);
             createSpecialOrb(enemy.position.clone());
+            
+            // 20% chance to drop a weapon
+            if (Math.random() < 0.2) {
+                const droppedWeapon = weaponTypes[Math.floor(Math.random() * weaponTypes.length)];
+                createPickup(droppedWeapon, enemy.position.clone());
+            }
+            
             updateUI();
             return true; // Enemy fully dead
         }
@@ -2916,26 +2932,28 @@
             }
         }
 
-        function createPickup(weaponType) {
+        function createPickup(weaponType, position = null) {
             const geom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
             const mat = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
             const mesh = new THREE.Mesh(geom, mat);
             mesh.castShadow = true;
             
-            const angle = Math.random() * Math.PI * 2;
-            const distance = Math.random() * 15 + 5;
-            const x = Math.cos(angle) * distance;
-            const z = Math.sin(angle) * distance;
-            mesh.position.set(x, getTerrainHeight(x, z) + 0.5, z);
+            if (position) {
+                mesh.position.copy(position);
+                mesh.position.y += 0.5;
+            } else {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 15 + 5;
+                const x = Math.cos(angle) * distance;
+                const z = Math.sin(angle) * distance;
+                mesh.position.set(x, getTerrainHeight(x, z) + 0.5, z);
+            }
             
             scene.add(mesh);
             pickups.push({ mesh, weaponType, rotation: 0 });
         }
 
         const weaponTypes = ['sword', 'hammer', 'rifle', 'machineGun', 'catapult', 'cannon'];
-        for (let i = 0; i < 5; i++) {
-            createPickup(weaponTypes[Math.floor(Math.random() * weaponTypes.length)]);
-        }
 
         // ==================== INPUT ====================
         const keys = {};
@@ -3085,7 +3103,7 @@
                 player.velocity.add(right.clone().multiplyScalar(joystickState.x * moveSpeed));
             }
 
-            // Double Jump with wing flapping
+            // Multi-jump with wing flapping (character-specific jump count)
             if (keys[' '] && player.jumpsUsed < player.maxJumps) {
                 if (!player.lastJumpKey) {
                     player.velocity.y = jumpForce;
@@ -3093,20 +3111,45 @@
                     player.isJumping = true;
                     player.wingFlapTime = 10; // Wing flap duration
                     player.lastJumpKey = true;
+                    player.isGliding = false;
                 }
             } else {
                 player.lastJumpKey = false;
             }
+            
+            // Gliding - hold space while falling to glide with wings outstretched
+            if (keys[' '] && player.velocity.y < 0 && player.jumpsUsed >= player.maxJumps && gameSettings.character !== 'eggySurprise') {
+                player.isGliding = true;
+                player.velocity.y = Math.max(player.velocity.y, -0.08); // Slow fall while gliding
+            } else if (!keys[' ']) {
+                player.isGliding = false;
+            }
 
-            // Wing flapping animation
-            if (player.wingFlapTime > 0) {
-                player.wingFlapTime--;
-                const flapAngle = Math.sin(player.wingFlapTime * 0.8) * Math.PI / 3;
-                player.mesh.userData.leftWing.rotation.z = -Math.PI / 6 - flapAngle;
-                player.mesh.userData.rightWing.rotation.z = Math.PI / 6 + flapAngle;
-            } else {
-                player.mesh.userData.leftWing.rotation.z = -Math.PI / 6;
-                player.mesh.userData.rightWing.rotation.z = Math.PI / 6;
+            // Wing animation based on state
+            if (player.mesh.userData.leftWing && player.mesh.userData.rightWing) {
+                if (player.isGliding) {
+                    // Wings outstretched while gliding
+                    player.mesh.userData.leftWing.rotation.z = -Math.PI / 2.5;
+                    player.mesh.userData.rightWing.rotation.z = Math.PI / 2.5;
+                } else if (player.wingFlapTime > 0) {
+                    player.wingFlapTime--;
+                    
+                    // Chick 7 uses special 67 wing pattern when jumping
+                    if (gameSettings.character === 'chick7') {
+                        player.wing67Time += 0.3;
+                        player.mesh.userData.leftWing.rotation.z = -Math.PI / 6 + Math.sin(player.wing67Time) * Math.PI / 3;
+                        player.mesh.userData.rightWing.rotation.z = Math.PI / 6 + Math.sin(player.wing67Time + 0.67 * Math.PI) * Math.PI / 3;
+                    } else {
+                        // Normal wing flapping for other birds
+                        const flapAngle = Math.sin(player.wingFlapTime * 0.8) * Math.PI / 3;
+                        player.mesh.userData.leftWing.rotation.z = -Math.PI / 6 - flapAngle;
+                        player.mesh.userData.rightWing.rotation.z = Math.PI / 6 + flapAngle;
+                    }
+                } else {
+                    // Reset to default position
+                    player.mesh.userData.leftWing.rotation.z = -Math.PI / 6;
+                    player.mesh.userData.rightWing.rotation.z = Math.PI / 6;
+                }
             }
 
             // Apply velocity
@@ -4223,6 +4266,9 @@
             player.isInvisible = false;
             player.isInvulnerable = false;
             player.berserkerRage = false;
+            player.wing67Time = 0;
+            player.isGliding = false;
+            player.maxJumps = characterConfig[gameSettings.character].maxJumps || 2;
             
             // Clear special orbs
             specialOrbs.forEach(orb => scene.remove(orb.mesh));
@@ -4346,10 +4392,11 @@
         // Mobile button logic
         document.getElementById('mobile-jump').addEventListener('touchstart', (e) => {
             e.preventDefault();
-            if (!gameState.isPaused && !gameState.isGameOver && player.jumpsUsed < 2) {
+            if (!gameState.isPaused && !gameState.isGameOver && player.jumpsUsed < player.maxJumps) {
                 player.velocity.y = 0.2;
                 player.jumpsUsed++;
                 player.isJumping = true;
+                player.wingFlapTime = 10;
             }
         });
 
