@@ -445,6 +445,16 @@
             border-color: #FF6B00;
         }
 
+        .char-btn.locked {
+            opacity: 0.5;
+            background: #333;
+            border-color: #666;
+        }
+
+        .char-btn.locked:hover {
+            border-color: #888;
+        }
+
         .char-description {
             font-size: 12px;
             color: #aaa;
@@ -516,6 +526,165 @@
         #special-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 0 30px rgba(148, 0, 211, 0.8);
+        }
+
+        /* Shop Styles */
+        #shop-btn {
+            position: absolute;
+            top: 20px;
+            right: 140px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            z-index: 15;
+            display: none;
+        }
+
+        #shop-btn:hover {
+            background: linear-gradient(135deg, #FFEC8B, #FFD700);
+            transform: scale(1.05);
+        }
+
+        #coins-display {
+            position: absolute;
+            top: 20px;
+            right: 250px;
+            padding: 8px 16px;
+            font-size: 18px;
+            background: rgba(0,0,0,0.6);
+            color: #FFD700;
+            border-radius: 8px;
+            z-index: 15;
+            display: none;
+        }
+
+        #shop-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a3a2a 0%, #0d1f15 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .shop-title {
+            font-size: 48px;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+        }
+
+        .shop-coins {
+            font-size: 24px;
+            color: #FFD700;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        .shop-section {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 25px;
+        }
+
+        .shop-section h3 {
+            color: #4CAF50;
+            font-size: 24px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 8px;
+        }
+
+        .shop-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .shop-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .shop-item:hover {
+            border-color: #FFD700;
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+        }
+
+        .shop-item.purchased {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #4CAF50;
+        }
+
+        .shop-item.locked {
+            border-color: #666;
+        }
+
+        .shop-item-name {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .shop-item-desc {
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .shop-item-price {
+            color: #FFD700;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .shop-item-price.affordable {
+            color: #4CAF50;
+        }
+
+        .shop-back-btn {
+            margin-top: 20px;
+            padding: 15px 50px;
+            font-size: 20px;
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .shop-back-btn:hover {
+            background: #666;
         }
 
         #special-btn:active {
@@ -668,6 +837,33 @@
     </div>
 
     <button id="quit-btn">QUIT TO MENU</button>
+    <div id="coins-display">Coins: <span id="coins-count">0</span></div>
+    <button id="shop-btn">SHOP</button>
+
+    <!-- Shop Page -->
+    <div id="shop-page">
+        <div class="shop-header">
+            <h1 class="shop-title">Duck Mart</h1>
+            <div class="shop-coins">Coins: <span id="shop-coins">0</span></div>
+        </div>
+
+        <div class="shop-section">
+            <h3>Extra Lives</h3>
+            <div class="shop-items" id="shop-lives"></div>
+        </div>
+
+        <div class="shop-section">
+            <h3>Premium Bird Variants</h3>
+            <div class="shop-items" id="shop-birds"></div>
+        </div>
+
+        <div class="shop-section">
+            <h3>Weapons (This Game)</h3>
+            <div class="shop-items" id="shop-weapons"></div>
+        </div>
+
+        <button class="shop-back-btn" onclick="closeShop()">Back to Game</button>
+    </div>
     
     <div id="ability-bar">
         <div id="ability-fill"></div>
@@ -733,6 +929,9 @@
                     <button class="char-btn" data-char="chick7">Chick 7</button>
                     <button class="char-btn" data-char="loonatic">Loonatic</button>
                     <button class="char-btn" data-char="eggySurprise">Eggy Surprise</button>
+                    <button class="char-btn locked" data-char="goldenDuck">Golden Duck (Shop)</button>
+                    <button class="char-btn locked" data-char="phoenixFowl">Phoenix Fowl (Shop)</button>
+                    <button class="char-btn locked" data-char="robotRooster">Robot Rooster (Shop)</button>
                 </div>
                 <div class="char-description" id="char-description">Classic yellow duck - balanced gameplay</div>
             </div>
@@ -855,6 +1054,44 @@
                 orbColor: 0xFFD700,
                 isEgg: true,
                 maxJumps: 1
+            },
+            goldenDuck: {
+                name: 'Golden Duck',
+                description: 'Shiny golden duck - earn 2x coins from kills!',
+                colors: { body: 0xFFD700, head: 0xFFD700, beak: 0xFF8C00, wing: 0xFFC125 },
+                ability: null,
+                abilityCooldown: 0,
+                special: null,
+                specialName: 'None',
+                orbColor: 0xFFD700,
+                maxJumps: 2,
+                coinMultiplier: 2
+            },
+            phoenixFowl: {
+                name: 'Phoenix Fowl',
+                description: 'Fiery bird - immune to explosions! Burn aura damages nearby enemies!',
+                colors: { body: 0xFF4500, head: 0xFF6347, beak: 0xFFD700, wing: 0xFF0000 },
+                ability: 'fireAura',
+                abilityCooldown: 10000,
+                abilityDuration: 5000,
+                special: 'phoenixRebirth',
+                specialName: 'Phoenix Rebirth',
+                orbColor: 0xFF4500,
+                maxJumps: 3,
+                explosionImmune: true
+            },
+            robotRooster: {
+                name: 'Robot Rooster',
+                description: 'Mechanical menace - 50% faster attack speed! Laser eyes!',
+                colors: { body: 0x708090, head: 0x778899, beak: 0xB0C4DE, wing: 0x4682B4 },
+                ability: 'laserEyes',
+                abilityCooldown: 6000,
+                abilityDuration: 0,
+                special: 'overcharge',
+                specialName: 'Overcharge',
+                orbColor: 0x00FFFF,
+                maxJumps: 2,
+                attackSpeedMultiplier: 0.5
             }
         };
         
@@ -948,8 +1185,42 @@
             lastSpawnTime: 0,
             gameStartTime: 0,
             gameTime: 0,
-            vehicle: null
+            vehicle: null,
+            coins: 0
         };
+        
+        // Load saved coins from localStorage
+        const savedCoins = localStorage.getItem('duckDefenseCoins');
+        if (savedCoins) gameState.coins = parseInt(savedCoins) || 0;
+        
+        // Shop items configuration
+        const shopItems = {
+            lives: [
+                { id: 'extraLife', name: 'Extra Life', description: '+1 life during this game', price: 50, type: 'consumable' },
+                { id: 'fullHeal', name: 'Full Heal', description: 'Restore all 3 lives', price: 100, type: 'consumable' }
+            ],
+            birds: [
+                { id: 'goldenDuck', name: 'Golden Duck', description: 'Shiny golden duck - earn 2x coins!', price: 500, type: 'character', unlockId: 'goldenDuck' },
+                { id: 'phoenixFowl', name: 'Phoenix Fowl', description: 'Fiery bird - immune to explosions!', price: 750, type: 'character', unlockId: 'phoenixFowl' },
+                { id: 'robotRooster', name: 'Robot Rooster', description: 'Mechanical menace - faster attack speed!', price: 1000, type: 'character', unlockId: 'robotRooster' }
+            ],
+            weapons: [
+                { id: 'buySword', name: 'Sword', description: 'Unlock sword for this game', price: 30, type: 'weapon', weaponId: 'sword' },
+                { id: 'buyHammer', name: 'Hammer', description: 'Unlock hammer for this game', price: 40, type: 'weapon', weaponId: 'hammer' },
+                { id: 'buyRifle', name: 'Rifle', description: 'Unlock rifle for this game', price: 60, type: 'weapon', weaponId: 'rifle' },
+                { id: 'buyMachineGun', name: 'Machine Gun', description: 'Unlock machine gun for this game', price: 80, type: 'weapon', weaponId: 'machineGun' },
+                { id: 'buyCatapult', name: 'Catapult', description: 'Unlock catapult for this game', price: 100, type: 'weapon', weaponId: 'catapult' },
+                { id: 'buyCannon', name: 'Cannon', description: 'Unlock cannon for this game', price: 150, type: 'weapon', weaponId: 'cannon' }
+            ]
+        };
+        
+        // Unlocked characters (persists across sessions)
+        let unlockedCharacters = ['duck', 'titanTurkey', 'kungPowChicken', 'mericaMallard', 'chick7', 'loonatic', 'eggySurprise'];
+        const savedUnlocks = localStorage.getItem('duckDefenseUnlocks');
+        if (savedUnlocks) unlockedCharacters = JSON.parse(savedUnlocks);
+        
+        // Weapons unlocked this game session
+        let sessionWeapons = ['fists'];
 
         // ==================== WEAPONS CONFIG ====================
         const weapons = {
@@ -1665,6 +1936,134 @@
                 yolk.visible = false;
                 bird.add(yolk);
                 bird.userData.yolkDrip = yolk;
+            }
+            
+            if (charType === 'goldenDuck') {
+                // Shiny golden appearance with sparkles
+                const shineMat = new THREE.MeshLambertMaterial({ 
+                    color: 0xFFD700,
+                    emissive: 0x996600,
+                    emissiveIntensity: 0.2
+                });
+                body.material = shineMat;
+                head.material = shineMat.clone();
+                
+                // Crown
+                const crownMat = new THREE.MeshLambertMaterial({ color: 0xFFD700, emissive: 0xCC9900, emissiveIntensity: 0.3 });
+                const crownBase = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 0.1, 8), crownMat);
+                crownBase.position.y = 1.15;
+                bird.add(crownBase);
+                
+                // Crown points
+                for (let i = 0; i < 5; i++) {
+                    const point = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.2, 4), crownMat);
+                    const angle = (i / 5) * Math.PI * 2;
+                    point.position.set(Math.sin(angle) * 0.2, 1.3, Math.cos(angle) * 0.2);
+                    bird.add(point);
+                }
+                
+                // Gem on crown
+                const gem = new THREE.Mesh(
+                    new THREE.OctahedronGeometry(0.08),
+                    new THREE.MeshBasicMaterial({ color: 0xFF0000 })
+                );
+                gem.position.set(0, 1.35, 0.2);
+                bird.add(gem);
+            }
+            
+            if (charType === 'phoenixFowl') {
+                // Fiery appearance with flame particles
+                const flameMat = new THREE.MeshLambertMaterial({ 
+                    color: 0xFF4500,
+                    emissive: 0xFF2200,
+                    emissiveIntensity: 0.4
+                });
+                
+                // Flame crest on head
+                for (let i = 0; i < 7; i++) {
+                    const flame = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.08, 0.3 + Math.random() * 0.2, 4),
+                        new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xFF4500 : 0xFFD700 })
+                    );
+                    flame.position.set((i - 3) * 0.08, 1.2 + Math.random() * 0.1, -0.1);
+                    flame.rotation.z = (Math.random() - 0.5) * 0.3;
+                    bird.add(flame);
+                }
+                
+                // Fire tail feathers
+                for (let i = -2; i <= 2; i++) {
+                    const tailFlame = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.1, 0.6, 4),
+                        new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xFF0000 : 0xFF8C00 })
+                    );
+                    tailFlame.position.set(i * 0.12, 0.2, -0.55);
+                    tailFlame.rotation.x = -0.5;
+                    tailFlame.rotation.z = i * 0.1;
+                    bird.add(tailFlame);
+                }
+                
+                // Fire aura (always visible but subtle)
+                const fireAura = new THREE.Mesh(
+                    new THREE.SphereGeometry(1.0, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: 0xFF4500, transparent: true, opacity: 0.15 })
+                );
+                bird.add(fireAura);
+                bird.userData.fireAura = fireAura;
+            }
+            
+            if (charType === 'robotRooster') {
+                // Metallic body with mechanical features
+                const metalMat = new THREE.MeshLambertMaterial({ color: 0x708090 });
+                
+                // Antenna on head
+                const antenna = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.02, 0.02, 0.4, 6),
+                    metalMat
+                );
+                antenna.position.set(0, 1.3, 0);
+                bird.add(antenna);
+                
+                // Antenna ball
+                const antennaBall = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.06, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: 0x00FFFF })
+                );
+                antennaBall.position.set(0, 1.5, 0);
+                bird.add(antennaBall);
+                bird.userData.antennaBall = antennaBall;
+                
+                // Mechanical eyes (glowing cyan)
+                leftEye.material = new THREE.MeshBasicMaterial({ color: 0x00FFFF });
+                rightEye.material = new THREE.MeshBasicMaterial({ color: 0x00FFFF });
+                leftEye.scale.set(1, 1, 0.5);
+                rightEye.scale.set(1, 1, 0.5);
+                
+                // Chest panel
+                const panel = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.4, 0.3, 0.05),
+                    new THREE.MeshLambertMaterial({ color: 0x333333 })
+                );
+                panel.position.set(0, 0.2, 0.55);
+                bird.add(panel);
+                
+                // LED lights on panel
+                for (let i = 0; i < 3; i++) {
+                    const led = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.03, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: [0xFF0000, 0x00FF00, 0x0000FF][i] })
+                    );
+                    led.position.set((i - 1) * 0.1, 0.2, 0.6);
+                    bird.add(led);
+                }
+                
+                // Mechanical wings (visible joints)
+                const jointMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                const leftJoint = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), jointMat);
+                leftJoint.position.set(-0.5, 0.2, 0);
+                bird.add(leftJoint);
+                const rightJoint = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), jointMat);
+                rightJoint.position.set(0.5, 0.2, 0);
+                bird.add(rightJoint);
             }
             
             return bird;
@@ -2399,6 +2798,10 @@
             gameState.kills++;
             trackKill(killSource);
             createSpecialOrb(enemy.position.clone());
+            
+            // Award coins based on enemy type
+            const coinReward = enemy.type === 'hulk' ? 15 : (enemy.type === 'catapult' ? 10 : 5);
+            awardCoins(coinReward);
             
             // 20% chance to drop a weapon
             if (Math.random() < 0.2) {
@@ -3259,7 +3662,16 @@
                 const weapon = weapons[gameState.currentWeapon];
                 const now = Date.now();
                 // Berserker Rage reduces weapon cooldown by 80%
-                const effectiveCooldown = player.berserkerRage ? weapon.cooldown * 0.2 : weapon.cooldown;
+                // Robot Rooster has 50% faster attacks (attackSpeedMultiplier = 0.5)
+                const charConfig = characterConfig[gameSettings.character];
+                let effectiveCooldown = weapon.cooldown;
+                if (charConfig.attackSpeedMultiplier) {
+                    effectiveCooldown *= charConfig.attackSpeedMultiplier;
+                }
+                // Berserker Rage further reduces cooldown by 80%
+                if (player.berserkerRage) {
+                    effectiveCooldown *= 0.2;
+                }
                 if (mouseDown && now - player.lastAttackTime > effectiveCooldown) {
                     player.lastAttackTime = now;
                     
@@ -3972,8 +4384,9 @@
                             bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 25 });
                         }
                         
-                        // Check if player is in blast radius
-                        if (distToPlayer < blastRadius && !player.isInvulnerable) {
+                        // Check if player is in blast radius (Phoenix Fowl is immune to explosions)
+                        const charConfig = characterConfig[gameSettings.character];
+                        if (distToPlayer < blastRadius && !player.isInvulnerable && !charConfig.explosionImmune) {
                             const damageAmount = Math.ceil(proj.damage * (1 - distToPlayer / blastRadius));
                             handlePlayerDamage(damageAmount);
                             
@@ -4104,6 +4517,118 @@
             document.getElementById('time').textContent = Math.floor(gameState.gameTime);
             document.getElementById('current-weapon').textContent = 
                 gameState.currentWeapon.charAt(0).toUpperCase() + gameState.currentWeapon.slice(1);
+            document.getElementById('coins-count').textContent = gameState.coins;
+        }
+        
+        function awardCoins(amount) {
+            const config = characterConfig[gameSettings.character];
+            const multiplier = config.coinMultiplier || 1;
+            const finalAmount = Math.floor(amount * multiplier);
+            gameState.coins += finalAmount;
+            localStorage.setItem('duckDefenseCoins', gameState.coins);
+            updateUI();
+        }
+        
+        function openShop() {
+            gameState.isPaused = true;
+            document.getElementById('shop-page').style.display = 'flex';
+            renderShopItems();
+        }
+        
+        function closeShop() {
+            document.getElementById('shop-page').style.display = 'none';
+            if (gameState.playing) {
+                gameState.isPaused = false;
+            }
+        }
+        
+        function renderShopItems() {
+            document.getElementById('shop-coins').textContent = gameState.coins;
+            
+            // Render lives
+            const livesContainer = document.getElementById('shop-lives');
+            livesContainer.innerHTML = '';
+            shopItems.lives.forEach(item => {
+                const div = createShopItemElement(item);
+                livesContainer.appendChild(div);
+            });
+            
+            // Render birds
+            const birdsContainer = document.getElementById('shop-birds');
+            birdsContainer.innerHTML = '';
+            shopItems.birds.forEach(item => {
+                const owned = unlockedCharacters.includes(item.unlockId);
+                const div = createShopItemElement(item, owned);
+                birdsContainer.appendChild(div);
+            });
+            
+            // Render weapons
+            const weaponsContainer = document.getElementById('shop-weapons');
+            weaponsContainer.innerHTML = '';
+            shopItems.weapons.forEach(item => {
+                const owned = sessionWeapons.includes(item.weaponId);
+                const div = createShopItemElement(item, owned);
+                weaponsContainer.appendChild(div);
+            });
+        }
+        
+        function createShopItemElement(item, owned = false) {
+            const div = document.createElement('div');
+            div.className = 'shop-item' + (owned ? ' purchased' : '');
+            
+            const affordable = gameState.coins >= item.price;
+            
+            div.innerHTML = `
+                <div class="shop-item-name">${item.name}</div>
+                <div class="shop-item-desc">${item.description}</div>
+                <div class="shop-item-price ${affordable && !owned ? 'affordable' : ''}">${owned ? 'OWNED' : item.price + ' coins'}</div>
+            `;
+            
+            if (!owned) {
+                div.onclick = () => purchaseItem(item);
+            }
+            
+            return div;
+        }
+        
+        function purchaseItem(item) {
+            if (gameState.coins < item.price) {
+                alert('Not enough coins!');
+                return;
+            }
+            
+            gameState.coins -= item.price;
+            localStorage.setItem('duckDefenseCoins', gameState.coins);
+            
+            switch (item.type) {
+                case 'consumable':
+                    if (item.id === 'extraLife') {
+                        gameState.lives++;
+                    } else if (item.id === 'fullHeal') {
+                        gameState.lives = 3;
+                    }
+                    updateUI();
+                    break;
+                    
+                case 'character':
+                    if (!unlockedCharacters.includes(item.unlockId)) {
+                        unlockedCharacters.push(item.unlockId);
+                        localStorage.setItem('duckDefenseUnlocks', JSON.stringify(unlockedCharacters));
+                        updateCharacterButtons();
+                    }
+                    break;
+                    
+                case 'weapon':
+                    if (!sessionWeapons.includes(item.weaponId)) {
+                        sessionWeapons.push(item.weaponId);
+                        gameState.currentWeapon = item.weaponId;
+                        updatePlayerWeapon();
+                    }
+                    break;
+            }
+            
+            renderShopItems();
+            updateUI();
         }
         
         function handlePlayerDamage(damage) {
@@ -4420,6 +4945,9 @@
             document.getElementById('stats-page').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
             document.getElementById('quit-btn').style.display = 'none';
+            document.getElementById('shop-btn').style.display = 'none';
+            document.getElementById('coins-display').style.display = 'none';
+            document.getElementById('shop-page').style.display = 'none';
             document.getElementById('ability-bar').style.display = 'none';
             document.getElementById('ability-prompt').style.display = 'none';
             document.getElementById('special-btn').style.display = 'none';
@@ -4436,6 +4964,11 @@
             resetSessionStats();
             gameState.playing = true;
             document.getElementById('quit-btn').style.display = 'block';
+            document.getElementById('shop-btn').style.display = 'block';
+            document.getElementById('coins-display').style.display = 'block';
+            
+            // Reset session weapons
+            sessionWeapons = ['fists'];
             
             // Apply difficulty settings
             const diff = difficultyConfig[gameSettings.difficulty];
@@ -4452,6 +4985,7 @@
             gameState.gameStartTime = Date.now();
             gameState.lastSpawnTime = Date.now();
             lastTruckSpawnTime = Date.now();
+            updateUI();
         }
         
         // Draw score graph
@@ -4662,14 +5196,37 @@
         // Character selection buttons
         document.querySelectorAll('.char-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                const charId = btn.dataset.char;
+                
+                // Check if character is unlocked
+                if (!unlockedCharacters.includes(charId)) {
+                    alert('This character is locked! Purchase it from the Shop during gameplay.');
+                    return;
+                }
+                
                 document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                gameSettings.character = btn.dataset.char;
+                gameSettings.character = charId;
                 const config = characterConfig[gameSettings.character];
                 document.getElementById('char-description').textContent = config ? config.description : '';
                 saveSettings();
             });
         });
+        
+        // Update locked status of character buttons
+        function updateCharacterButtons() {
+            document.querySelectorAll('.char-btn').forEach(btn => {
+                const charId = btn.dataset.char;
+                if (unlockedCharacters.includes(charId)) {
+                    btn.classList.remove('locked');
+                    btn.textContent = characterConfig[charId].name;
+                } else {
+                    btn.classList.add('locked');
+                    btn.textContent = characterConfig[charId].name + ' (Shop)';
+                }
+            });
+        }
+        updateCharacterButtons();
 
         document.getElementById('restart-btn').addEventListener('click', () => {
             resetGame();
@@ -4681,6 +5238,8 @@
                 activateSpecial();
             }
         });
+
+        document.getElementById('shop-btn').addEventListener('click', openShop);
 
         document.getElementById('quit-btn').addEventListener('click', () => {
             gameState.isPaused = true;
@@ -4695,6 +5254,7 @@
             player.isJumping = false;
             player.jumpsUsed = 0;
             player.bloodDripCounter = 0;
+            sessionWeapons = ['fists'];
             
             // Reset player appearance
             player.mesh.userData.body.material.color.setHex(0xFFFF00);

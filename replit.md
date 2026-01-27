@@ -12,6 +12,7 @@ The game features a full menu system:
 - **PLAY GAME** - Start a new game with selected difficulty and character
 - **SETTINGS** - Adjust difficulty, input method, and select your character
 - **STATISTICS** - View your gameplay stats and score history graph
+- **SHOP** - In-game store to spend coins on lives, weapons, and premium bird variants
 
 ## How to Play
 - **W/A/S/D** - Move forward/left/back/right
@@ -109,6 +110,28 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
   - Gets cracked and leaks yolk as it takes damage
   - On death: Eggsplosion deals massive AOE damage, then transforms into random bird at full health!
 
+### Premium Shop Characters (Unlockable)
+- **Golden Duck** (Shiny golden with crown) - 500 coins
+  - Earn 2x coins from kills!
+  - Royal crown with gem
+- **Phoenix Fowl** (Fiery orange with flames) - 750 coins  
+  - Immune to explosions!
+  - Fire aura damages nearby enemies (Q ability)
+  - 3 jumps
+- **Robot Rooster** (Metallic gray with LEDs) - 1000 coins
+  - 50% faster attack speed!
+  - Laser eyes ability (Q)
+  - Glowing cyan eyes and antenna
+
+### Coin System & Shop
+- **Earn coins** by defeating hunters (5 coins normal, 10 catapult, 15 hulk)
+- **Golden Duck** earns 2x coins from all kills
+- **Open the Shop** during gameplay to spend coins on:
+  - Extra lives and full heals
+  - Premium bird variants (permanent unlocks)
+  - Weapons for the current game session
+- Coins persist across game sessions
+
 ### Special Orb System
 - **Orbs drop** from slain hunters (25% chance)
 - **Collect orbs** to charge your special ability
@@ -130,6 +153,12 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-27**: In-game shop system
+  - Added coin currency earned from defeating hunters (5/10/15 based on enemy type)
+  - Duck Mart shop for purchasing extra lives, weapons, and premium characters
+  - Added 3 premium unlockable characters: Golden Duck, Phoenix Fowl, Robot Rooster
+  - Golden Duck earns 2x coins, Phoenix Fowl immune to explosions, Robot Rooster attacks 50% faster
+  - Coins and character unlocks persist across sessions
 - **2026-01-27**: Movement and weapon improvements
   - Character-specific jump counts (Titan Turkey: 1, Kung Pow Chicken: 4, etc.)
   - Added gliding mechanic - hold SPACE while falling to glide
