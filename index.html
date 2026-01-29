@@ -439,6 +439,9 @@
             display: flex;
             justify-content: center;
         }
+
+        .difficulty-btns, .input-btns {
+            display: flex;
             gap: 10px;
         }
 
@@ -4496,8 +4499,18 @@
             }
         });
         window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
-        window.addEventListener('mousedown', () => mouseDown = true);
-        window.addEventListener('mouseup', () => mouseDown = false);
+        window.addEventListener('mousedown', (e) => {
+            if (e.button === 0) mouseDown = true;
+            if (e.button === 2 && gameState.playing) {
+                activateSpecial();
+            }
+        });
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 0) mouseDown = false;
+        });
+        window.addEventListener('contextmenu', (e) => {
+            if (gameState.playing) e.preventDefault();
+        });
 
         // ==================== COLLISION DETECTION ====================
         function checkCollision(position, radius) {
