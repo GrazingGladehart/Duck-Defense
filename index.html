@@ -5377,23 +5377,31 @@
                 if (!player.isInvisible) {
                     if (enemy.type === 'hulk') {
                         // Hulk melee attack
-                        if (dist < 4 && now - enemy.lastMeleeTime > 1500) {
+                        if (dist < 5 && now - enemy.lastMeleeTime > 2000) {
                             enemy.lastMeleeTime = now;
                             
-                            // Club swing animation
-                            enemy.mesh.rotation.y += 0.5;
-                            
-                            // Damage player if in range (check invulnerability)
-                            if (dist < 3 && !player.isInvulnerable) {
-                                handlePlayerDamage(1);
+                            // Hulk Stomp/Roar behavior
+                            if (Math.random() < 0.4) {
+                                // Roar - briefly stun player and push back
+                                if (dist < 8) {
+                                    const pushDir = player.position.clone().sub(enemy.position).normalize();
+                                    player.velocity.add(pushDir.multiplyScalar(0.8));
+                                    // Visual effect
+                                    for (let i = 0; i < 20; i++) {
+                                        createBloodParticle(enemy.position.clone(), 'large');
+                                    }
+                                }
+                            } else {
+                                // Club swing animation
+                                enemy.mesh.rotation.y += 0.5;
                                 
-                                // Knockback effect on player
-                                const knockDir = player.position.clone().sub(enemy.position).normalize();
-                                player.velocity.add(knockDir.multiplyScalar(0.5));
-                                
-                                // Impact particles
-                                for (let i = 0; i < 10; i++) {
-                                    createBloodParticle(player.position.clone(), 'normal');
+                                // Damage player if in range (check invulnerability)
+                                if (dist < 4 && !player.isInvulnerable) {
+                                    handlePlayerDamage(1);
+                                    
+                                    // Knockback effect on player
+                                    const knockDir = player.position.clone().sub(enemy.position).normalize();
+                                    player.velocity.add(knockDir.multiplyScalar(0.6));
                                 }
                             }
                         }
@@ -5504,7 +5512,8 @@
                     player.position.copy(vehicle.position);
                     player.position.y += 3;
                     player.mesh.position.copy(player.position);
-                    player.mesh.visible = false;
+                    player.mesh.visible = true; // Make bird visible in vehicle
+                    player.mesh.scale.set(0.5, 0.5, 0.5); // Shrink bird to fit in driver seat
                     
                     // Tank shooting with click
                     if (vehicle.isTank && mouseDown && now - (vehicle.lastPlayerShot || 0) > 1500) {
@@ -5538,6 +5547,7 @@
                     if (keys['e'] && !vehicle.exitCooldown) {
                         gameState.vehicle = null;
                         player.mesh.visible = true;
+                        player.mesh.scale.set(1, 1, 1); // Reset bird size
                         player.position.x = vehicle.position.x + 3;
                         player.position.z = vehicle.position.z;
                         player.position.y = getTerrainHeight(player.position.x, player.position.z) + 1;
@@ -5730,26 +5740,32 @@
                     proj.velocity.y -= 0.015;
                 }
                 
-                // Boomerang behavior
-                if (proj.isBoomerang) {
-                    proj.travelDistance += proj.velocity.length();
-                    proj.mesh.rotation.y += 0.3; // Spin
+            // Boomerang behavior
+            if (proj.isBoomerang) {
+                proj.travelDistance += proj.velocity.length();
+                proj.mesh.rotation.y += 0.3; // Spin
+                
+                if (!proj.returning && proj.travelDistance > proj.maxDistance) {
+                    proj.returning = true;
+                }
+                
+                if (proj.returning) {
+                    // Return to player
+                    const toPlayer = player.position.clone().sub(proj.mesh.position).normalize();
+                    proj.velocity.lerp(toPlayer.multiplyScalar(0.8), 0.2); // Faster return
                     
-                    if (!proj.returning && proj.travelDistance > proj.maxDistance) {
-                        proj.returning = true;
-                    }
-                    
-                    if (proj.returning) {
-                        // Return to player
-                        const toPlayer = player.position.clone().sub(proj.mesh.position).normalize();
-                        proj.velocity.lerp(toPlayer.multiplyScalar(0.6), 0.15);
-                        
-                        // Check if reached player
-                        if (proj.mesh.position.distanceTo(player.position) < 2) {
-                            proj.lifetime = 0;
-                        }
+                    // Check if reached player
+                    if (proj.mesh.position.distanceTo(player.position) < 2) {
+                        proj.lifetime = 0;
                     }
                 }
+
+                // Boomerang multi-hit: reset hitEnemies list every 0.5 seconds to allow hitting the same enemy on return
+                if (!proj.lastHitReset || now - proj.lastHitReset > 500) {
+                    proj.hitEnemies = [];
+                    proj.lastHitReset = now;
+                }
+            }
                 
                 // Flame particles
                 if (proj.isFlame) {
