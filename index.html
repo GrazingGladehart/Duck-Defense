@@ -937,6 +937,7 @@
                     <button class="char-btn locked" data-char="goldenDuck">Golden Duck (Shop)</button>
                     <button class="char-btn locked" data-char="phoenixFowl">Phoenix Fowl (Shop)</button>
                     <button class="char-btn locked" data-char="robotRooster">Robot Rooster (Shop)</button>
+                    <button class="char-btn locked" data-char="poultrygeist">Poultrygeist (Shop)</button>
                 </div>
                 <div class="char-description" id="char-description">Classic yellow duck - balanced gameplay</div>
             </div>
@@ -1097,6 +1098,19 @@
                 orbColor: 0x00FFFF,
                 maxJumps: 2,
                 attackSpeedMultiplier: 0.5
+            },
+            poultrygeist: {
+                name: 'Poultrygeist',
+                description: 'Spectral chicken - summon a doppelganger clone!',
+                colors: { body: 0x88AACC, head: 0x99BBDD, beak: 0xAADDFF, wing: 0x7799BB },
+                ability: 'haunt',
+                abilityCooldown: 8000,
+                abilityDuration: 0,
+                special: 'doppelgangerDuo',
+                specialName: 'Doppelganger Duo',
+                orbColor: 0x88FFFF,
+                maxJumps: 3,
+                isGhost: true
             }
         };
         
@@ -1208,7 +1222,8 @@
             birds: [
                 { id: 'goldenDuck', name: 'Golden Duck', description: 'Shiny golden duck - earn 2x coins!', price: 500, type: 'character', unlockId: 'goldenDuck' },
                 { id: 'phoenixFowl', name: 'Phoenix Fowl', description: 'Fiery bird - immune to explosions!', price: 750, type: 'character', unlockId: 'phoenixFowl' },
-                { id: 'robotRooster', name: 'Robot Rooster', description: 'Mechanical menace - faster attack speed!', price: 1000, type: 'character', unlockId: 'robotRooster' }
+                { id: 'robotRooster', name: 'Robot Rooster', description: 'Mechanical menace - faster attack speed!', price: 1000, type: 'character', unlockId: 'robotRooster' },
+                { id: 'poultrygeist', name: 'Poultrygeist', description: 'Spectral ghost bird - summon a clone!', price: 850, type: 'character', unlockId: 'poultrygeist' }
             ],
             weapons: [
                 { id: 'buySword', name: 'Sword', description: 'Unlock sword for this game', price: 30, type: 'weapon', weaponId: 'sword' },
@@ -1225,6 +1240,7 @@
         
         // Companion state
         let sideChick = null;
+        let doppelganger = null;
         
         // Unlocked characters (persists across sessions)
         let unlockedCharacters = ['duck', 'titanTurkey', 'kungPowChicken', 'mericaMallard', 'chick7', 'loonatic', 'eggySurprise'];
@@ -2077,6 +2093,74 @@
                 const rightJoint = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), jointMat);
                 rightJoint.position.set(0.5, 0.2, 0);
                 bird.add(rightJoint);
+            }
+            
+            if (charType === 'poultrygeist') {
+                // Spectral ghost appearance - make body semi-transparent
+                body.material = new THREE.MeshLambertMaterial({ 
+                    color: 0x88AACC, 
+                    transparent: true, 
+                    opacity: 0.7 
+                });
+                head.material = new THREE.MeshLambertMaterial({ 
+                    color: 0x99BBDD, 
+                    transparent: true, 
+                    opacity: 0.75 
+                });
+                leftWing.material = new THREE.MeshLambertMaterial({ 
+                    color: 0x7799BB, 
+                    transparent: true, 
+                    opacity: 0.6 
+                });
+                rightWing.material = new THREE.MeshLambertMaterial({ 
+                    color: 0x7799BB, 
+                    transparent: true, 
+                    opacity: 0.6 
+                });
+                
+                // Glowing ghost eyes
+                leftEye.material = new THREE.MeshBasicMaterial({ color: 0x88FFFF });
+                rightEye.material = new THREE.MeshBasicMaterial({ color: 0x88FFFF });
+                
+                // Wispy tail instead of normal body shape
+                const tailGeom = new THREE.ConeGeometry(0.4, 1.2, 8);
+                const tailMat = new THREE.MeshLambertMaterial({ 
+                    color: 0x6688AA, 
+                    transparent: true, 
+                    opacity: 0.5 
+                });
+                const tail = new THREE.Mesh(tailGeom, tailMat);
+                tail.position.set(0, -0.8, 0);
+                tail.rotation.x = Math.PI;
+                bird.add(tail);
+                bird.userData.ghostTail = tail;
+                
+                // Ethereal glow aura
+                const auraGeom = new THREE.SphereGeometry(0.9, 12, 12);
+                const auraMat = new THREE.MeshBasicMaterial({ 
+                    color: 0x88FFFF, 
+                    transparent: true, 
+                    opacity: 0.15 
+                });
+                const aura = new THREE.Mesh(auraGeom, auraMat);
+                bird.add(aura);
+                bird.userData.ghostAura = aura;
+                
+                // Floating chains (ghostly touch)
+                const chainMat = new THREE.MeshLambertMaterial({ 
+                    color: 0x556677, 
+                    transparent: true, 
+                    opacity: 0.4 
+                });
+                for (let i = 0; i < 3; i++) {
+                    const link = new THREE.Mesh(
+                        new THREE.TorusGeometry(0.08, 0.02, 4, 8),
+                        chainMat
+                    );
+                    link.position.set(-0.3, -0.5 - i * 0.15, 0);
+                    link.rotation.y = Math.PI / 2;
+                    bird.add(link);
+                }
             }
             
             return bird;
@@ -3482,6 +3566,186 @@
                 case 'berserkerRage':
                     executeBerserkerRage();
                     break;
+                case 'doppelgangerDuo':
+                    executeDoppelgangerDuo();
+                    break;
+            }
+        }
+
+        function executeDoppelgangerDuo() {
+            // Remove existing doppelganger if there is one
+            if (doppelganger) {
+                scene.remove(doppelganger.mesh);
+                doppelganger = null;
+            }
+            
+            // Create a ghostly clone of the player
+            const cloneMesh = createCharacter('poultrygeist');
+            
+            // Make clone even more transparent/ghostly
+            cloneMesh.traverse(child => {
+                if (child.material) {
+                    child.material = child.material.clone();
+                    child.material.transparent = true;
+                    child.material.opacity = Math.min(child.material.opacity || 1, 0.5);
+                }
+            });
+            
+            // Position clone mirrored from player
+            const clonePos = player.position.clone();
+            clonePos.x += 3;
+            cloneMesh.position.copy(clonePos);
+            cloneMesh.position.y = getTerrainHeight(clonePos.x, clonePos.z) + 1;
+            scene.add(cloneMesh);
+            
+            // Spawn effect
+            for (let i = 0; i < 15; i++) {
+                const sparkle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.1),
+                    new THREE.MeshBasicMaterial({ color: 0x88FFFF, transparent: true, opacity: 0.8 })
+                );
+                sparkle.position.copy(clonePos);
+                sparkle.position.x += (Math.random() - 0.5) * 2;
+                sparkle.position.y += Math.random() * 2;
+                sparkle.position.z += (Math.random() - 0.5) * 2;
+                scene.add(sparkle);
+                bloodParticles.push({ 
+                    mesh: sparkle, 
+                    velocity: new THREE.Vector3((Math.random() - 0.5) * 0.2, 0.1, (Math.random() - 0.5) * 0.2), 
+                    lifetime: 30 
+                });
+            }
+            
+            doppelganger = {
+                mesh: cloneMesh,
+                position: clonePos.clone(),
+                health: 50,
+                lastAttackTime: 0,
+                attackCooldown: 1000
+            };
+            
+            player.specialActive = true;
+            player.specialEndTime = Date.now() + 20000; // Clone lasts 20 seconds
+        }
+        
+        function updateDoppelganger(delta) {
+            if (!doppelganger) return;
+            
+            const now = Date.now();
+            
+            // Mirror player's movement with offset
+            const mirrorOffset = new THREE.Vector3(3, 0, 0);
+            mirrorOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.lookAngle);
+            
+            const targetPos = player.position.clone().add(mirrorOffset);
+            const toTarget = targetPos.clone().sub(doppelganger.position);
+            const dist = toTarget.length();
+            
+            if (dist > 0.5) {
+                toTarget.normalize().multiplyScalar(0.2);
+                doppelganger.position.add(toTarget);
+            }
+            
+            // Keep clone at ground level with slight hover
+            const terrainY = getTerrainHeight(doppelganger.position.x, doppelganger.position.z);
+            doppelganger.position.y = terrainY + 1 + Math.sin(now * 0.003) * 0.2;
+            
+            doppelganger.mesh.position.copy(doppelganger.position);
+            doppelganger.mesh.rotation.y = player.lookAngle;
+            
+            // Clone attacks nearby enemies
+            if (now - doppelganger.lastAttackTime > doppelganger.attackCooldown) {
+                let nearestEnemy = null;
+                let nearestDist = 12;
+                
+                enemies.forEach(enemy => {
+                    const d = doppelganger.position.distanceTo(enemy.position);
+                    if (d < nearestDist) {
+                        nearestDist = d;
+                        nearestEnemy = enemy;
+                    }
+                });
+                
+                if (nearestEnemy) {
+                    doppelganger.lastAttackTime = now;
+                    
+                    // Ghostly attack projectile
+                    const attackDir = nearestEnemy.position.clone().sub(doppelganger.position).normalize();
+                    const start = doppelganger.position.clone();
+                    start.y += 0.5;
+                    
+                    const projGeom = new THREE.SphereGeometry(0.15, 6, 6);
+                    const projMat = new THREE.MeshBasicMaterial({ 
+                        color: 0x88FFFF, 
+                        transparent: true, 
+                        opacity: 0.8 
+                    });
+                    const projMesh = new THREE.Mesh(projGeom, projMat);
+                    projMesh.position.copy(start);
+                    scene.add(projMesh);
+                    
+                    projectiles.push({
+                        mesh: projMesh,
+                        velocity: attackDir.clone().multiplyScalar(0.5),
+                        damage: 25,
+                        lifetime: 80,
+                        fromPlayer: true,
+                        weaponType: 'doppelganger'
+                    });
+                }
+            }
+            
+            // Check if clone got hit by enemy projectiles
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const proj = projectiles[i];
+                if (!proj.fromPlayer) {
+                    const dist = proj.mesh.position.distanceTo(doppelganger.position);
+                    if (dist < 1.5) {
+                        doppelganger.health -= proj.damage || 10;
+                        scene.remove(proj.mesh);
+                        projectiles.splice(i, 1);
+                        
+                        // Hit effect
+                        for (let j = 0; j < 5; j++) {
+                            const spark = new THREE.Mesh(
+                                new THREE.SphereGeometry(0.08),
+                                new THREE.MeshBasicMaterial({ color: 0x88FFFF })
+                            );
+                            spark.position.copy(doppelganger.position);
+                            scene.add(spark);
+                            bloodParticles.push({
+                                mesh: spark,
+                                velocity: new THREE.Vector3((Math.random() - 0.5) * 0.3, 0.2, (Math.random() - 0.5) * 0.3),
+                                lifetime: 15
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Clone dies if health depleted or time runs out
+            if (doppelganger.health <= 0 || (player.specialActive && now >= player.specialEndTime)) {
+                // Death effect
+                for (let i = 0; i < 20; i++) {
+                    const ghost = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.12),
+                        new THREE.MeshBasicMaterial({ color: 0x88FFFF, transparent: true, opacity: 0.7 })
+                    );
+                    ghost.position.copy(doppelganger.position);
+                    ghost.position.x += (Math.random() - 0.5) * 2;
+                    ghost.position.y += Math.random() * 2;
+                    ghost.position.z += (Math.random() - 0.5) * 2;
+                    scene.add(ghost);
+                    bloodParticles.push({
+                        mesh: ghost,
+                        velocity: new THREE.Vector3((Math.random() - 0.5) * 0.2, 0.15, (Math.random() - 0.5) * 0.2),
+                        lifetime: 40
+                    });
+                }
+                
+                scene.remove(doppelganger.mesh);
+                doppelganger = null;
+                player.specialActive = false;
             }
         }
 
@@ -4181,9 +4445,106 @@
                 // Eagle strike - instant damage in area
                 executeEagleStrike();
                 player.abilityActive = false;
+            } else if (charType === 'poultrygeist') {
+                // Haunt attack - possess and damage nearby enemies
+                executeHauntAttack();
+                player.abilityActive = false;
             }
             
             updateAbilityUI();
+        }
+        
+        function executeHauntAttack() {
+            const hauntRadius = 10;
+            const hauntDamage = 50;
+            
+            // Create ghostly wave effect
+            for (let i = 0; i < 25; i++) {
+                const angle = (i / 25) * Math.PI * 2;
+                const dist = Math.random() * hauntRadius;
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.15),
+                    new THREE.MeshBasicMaterial({ 
+                        color: 0x88FFFF, 
+                        transparent: true, 
+                        opacity: 0.7 
+                    })
+                );
+                particle.position.copy(player.position);
+                particle.position.x += Math.cos(angle) * dist;
+                particle.position.z += Math.sin(angle) * dist;
+                particle.position.y += Math.random() * 2;
+                scene.add(particle);
+                
+                const vel = new THREE.Vector3(
+                    Math.cos(angle) * 0.15,
+                    0.2 + Math.random() * 0.1,
+                    Math.sin(angle) * 0.15
+                );
+                bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 40 });
+            }
+            
+            // Create expanding ghost ring
+            const ringGeom = new THREE.RingGeometry(0.5, 1, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ 
+                color: 0x88FFFF, 
+                transparent: true, 
+                opacity: 0.6,
+                side: THREE.DoubleSide
+            });
+            const ring = new THREE.Mesh(ringGeom, ringMat);
+            ring.position.copy(player.position);
+            ring.rotation.x = -Math.PI / 2;
+            scene.add(ring);
+            
+            // Animate ring expansion
+            let ringScale = 1;
+            const ringInterval = setInterval(() => {
+                ringScale += 0.8;
+                ring.scale.set(ringScale, ringScale, 1);
+                ring.material.opacity -= 0.05;
+                if (ring.material.opacity <= 0) {
+                    scene.remove(ring);
+                    clearInterval(ringInterval);
+                }
+            }, 50);
+            
+            // Damage and "haunt" enemies - they take damage and get confused
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const dist = player.position.distanceTo(enemy.position);
+                if (dist < hauntRadius) {
+                    enemy.health -= hauntDamage;
+                    
+                    // Haunted effect - enemy briefly stunned/confused
+                    enemy.isHaunted = true;
+                    enemy.hauntedUntil = Date.now() + 2000;
+                    
+                    // Ghost particles on enemy
+                    for (let j = 0; j < 5; j++) {
+                        const ghost = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.1),
+                            new THREE.MeshBasicMaterial({ 
+                                color: 0x88FFFF, 
+                                transparent: true, 
+                                opacity: 0.8 
+                            })
+                        );
+                        ghost.position.copy(enemy.position);
+                        ghost.position.y += Math.random() * 2;
+                        scene.add(ghost);
+                        bloodParticles.push({ 
+                            mesh: ghost, 
+                            velocity: new THREE.Vector3(0, 0.1, 0), 
+                            lifetime: 30 
+                        });
+                    }
+                    
+                    if (enemy.health <= 0) {
+                        handleEnemyDeath(enemy, i, 'haunt');
+                    }
+                }
+            }
         }
         
         function executeEagleStrike() {
@@ -4438,6 +4799,27 @@
             }
             
             enemies.forEach((enemy, idx) => {
+                // Check haunted status
+                if (enemy.isHaunted) {
+                    if (now >= enemy.hauntedUntil) {
+                        enemy.isHaunted = false;
+                    } else {
+                        // Haunted enemies wander randomly instead of attacking
+                        const wanderDir = new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.04,
+                            0,
+                            (Math.random() - 0.5) * 0.04
+                        );
+                        enemy.position.add(wanderDir);
+                        const terrainY = getTerrainHeight(enemy.position.x, enemy.position.z);
+                        enemy.position.y = terrainY + (enemy.type === 'hulk' ? 1.5 : 1);
+                        enemy.mesh.position.copy(enemy.position);
+                        // Spin around confused
+                        enemy.mesh.rotation.y += 0.15;
+                        return; // Skip normal behavior while haunted
+                    }
+                }
+                
                 // Move toward player (unless invisible)
                 const toPlayer = player.position.clone().sub(enemy.position);
                 const dist = toPlayer.length();
@@ -5354,6 +5736,12 @@
                 sideChick = null;
             }
             
+            // Remove Doppelganger if exists
+            if (doppelganger) {
+                scene.remove(doppelganger.mesh);
+                doppelganger = null;
+            }
+            
             // Clear special orbs
             specialOrbs.forEach(orb => scene.remove(orb.mesh));
             specialOrbs.length = 0;
@@ -5882,6 +6270,7 @@
             updateProjectiles(delta);
             updateGrenades();
             updateSideChick(delta);
+            updateDoppelganger(delta);
             updateBloodParticles(delta);
             updateWindStreaks(delta);
             updatePickups(delta);

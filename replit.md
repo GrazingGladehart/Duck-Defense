@@ -137,6 +137,12 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
   - 50% faster attack speed!
   - Laser eyes ability (Q)
   - Glowing cyan eyes and antenna
+- **Poultrygeist** (Spectral ghost chicken) - 850 coins
+  - Primary (Q): Haunt - releases ghostly wave that damages and confuses enemies
+  - Special: Doppelganger Duo - summons a ghost clone that mirrors you and attacks enemies!
+  - Clone can be killed by enemies but lasts 20 seconds
+  - Semi-transparent ghostly appearance with floating chains
+  - 3 jumps
 
 ### Coin System & Shop
 - **Earn coins** by defeating hunters (5 coins normal, 10 catapult, 15 hulk)
