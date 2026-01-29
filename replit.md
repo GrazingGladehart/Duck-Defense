@@ -142,9 +142,11 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 - **Earn coins** by defeating hunters (5 coins normal, 10 catapult, 15 hulk)
 - **Golden Duck** earns 2x coins from all kills
 - **Open the Shop** during gameplay to spend coins on:
-  - Extra lives and full heals
+  - Extra lives, full heals, and shields
   - Premium bird variants (permanent unlocks)
   - Weapons for the current game session
+  - **Side Chick** companion that fights at your side!
+- **Shields** block incoming damage (max 3 stacks)
 - Coins persist across game sessions
 
 ### Special Orb System

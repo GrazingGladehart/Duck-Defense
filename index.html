@@ -862,6 +862,11 @@
             <div class="shop-items" id="shop-weapons"></div>
         </div>
 
+        <div class="shop-section">
+            <h3>Extras</h3>
+            <div class="shop-items" id="shop-extras"></div>
+        </div>
+
         <button class="shop-back-btn" onclick="closeShop()">Back to Game</button>
     </div>
     
@@ -1197,7 +1202,8 @@
         const shopItems = {
             lives: [
                 { id: 'extraLife', name: 'Extra Life', description: '+1 life during this game', price: 50, type: 'consumable' },
-                { id: 'fullHeal', name: 'Full Heal', description: 'Restore all 3 lives', price: 100, type: 'consumable' }
+                { id: 'fullHeal', name: 'Full Heal', description: 'Restore all 3 lives', price: 100, type: 'consumable' },
+                { id: 'shield', name: 'Shield', description: 'Block the next hit (stacks up to 3)', price: 75, type: 'shield' }
             ],
             birds: [
                 { id: 'goldenDuck', name: 'Golden Duck', description: 'Shiny golden duck - earn 2x coins!', price: 500, type: 'character', unlockId: 'goldenDuck' },
@@ -1211,8 +1217,14 @@
                 { id: 'buyMachineGun', name: 'Machine Gun', description: 'Unlock machine gun for this game', price: 80, type: 'weapon', weaponId: 'machineGun' },
                 { id: 'buyCatapult', name: 'Catapult', description: 'Unlock catapult for this game', price: 100, type: 'weapon', weaponId: 'catapult' },
                 { id: 'buyCannon', name: 'Cannon', description: 'Unlock cannon for this game', price: 150, type: 'weapon', weaponId: 'cannon' }
+            ],
+            extras: [
+                { id: 'sideChick', name: 'Side Chick', description: 'A tiny pistol-wielding companion that fights at your side!', price: 200, type: 'companion' }
             ]
         };
+        
+        // Companion state
+        let sideChick = null;
         
         // Unlocked characters (persists across sessions)
         let unlockedCharacters = ['duck', 'titanTurkey', 'kungPowChicken', 'mericaMallard', 'chick7', 'loonatic', 'eggySurprise'];
@@ -2265,6 +2277,8 @@
             specialEndTime: 0,
             isInvisible: false,
             isInvulnerable: false,
+            // Shield system
+            shields: 0,
             berserkerRage: false
         };
 
@@ -2911,6 +2925,139 @@
                     }
                 }
             });
+        }
+
+        // Side Chick companion system
+        function createSideChickMesh() {
+            const chick = new THREE.Group();
+            
+            // Tiny fluffy body (smaller than regular chick)
+            const bodyGeom = new THREE.SphereGeometry(0.25, 8, 8);
+            const bodyMat = new THREE.MeshLambertMaterial({ color: 0xffee88 });
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            chick.add(body);
+            
+            // Fluffy head tuft
+            const tuftGeom = new THREE.ConeGeometry(0.08, 0.15, 4);
+            const tuftMat = new THREE.MeshLambertMaterial({ color: 0xffdd66 });
+            const tuft = new THREE.Mesh(tuftGeom, tuftMat);
+            tuft.position.set(0, 0.3, 0);
+            chick.add(tuft);
+            
+            // Tiny beak
+            const beakGeom = new THREE.ConeGeometry(0.05, 0.1, 4);
+            const beakMat = new THREE.MeshLambertMaterial({ color: 0xff8800 });
+            const beak = new THREE.Mesh(beakGeom, beakMat);
+            beak.rotation.x = Math.PI / 2;
+            beak.position.set(0, 0.05, 0.25);
+            chick.add(beak);
+            
+            // Beady eyes
+            const eyeGeom = new THREE.SphereGeometry(0.04, 6, 6);
+            const eyeMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
+            [-0.08, 0.08].forEach(x => {
+                const eye = new THREE.Mesh(eyeGeom, eyeMat);
+                eye.position.set(x, 0.12, 0.18);
+                chick.add(eye);
+            });
+            
+            // Tiny pistol in wing
+            const gunGeom = new THREE.CylinderGeometry(0.02, 0.02, 0.15, 4);
+            const gunMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
+            const gun = new THREE.Mesh(gunGeom, gunMat);
+            gun.rotation.z = Math.PI / 2;
+            gun.position.set(0.2, 0, 0.1);
+            chick.add(gun);
+            chick.gun = gun;
+            
+            return chick;
+        }
+        
+        function spawnSideChick() {
+            if (sideChick) return;
+            
+            const mesh = createSideChickMesh();
+            const startPos = player.position.clone();
+            startPos.x += 2;
+            mesh.position.copy(startPos);
+            mesh.position.y = getTerrainHeight(startPos.x, startPos.z) + 0.3;
+            scene.add(mesh);
+            
+            sideChick = {
+                mesh: mesh,
+                position: startPos.clone(),
+                lastShootTime: 0,
+                shootCooldown: 1200,
+                targetEnemy: null
+            };
+        }
+        
+        function updateSideChick(delta) {
+            if (!sideChick) return;
+            
+            const now = Date.now();
+            
+            // Follow player at offset
+            const targetPos = player.position.clone();
+            targetPos.x += Math.cos(gameState.gameTime * 0.5) * 2;
+            targetPos.z += Math.sin(gameState.gameTime * 0.5) * 2;
+            
+            const toTarget = targetPos.clone().sub(sideChick.position);
+            const dist = toTarget.length();
+            
+            if (dist > 0.5) {
+                toTarget.normalize().multiplyScalar(0.15);
+                sideChick.position.add(toTarget);
+            }
+            
+            // Hop animation
+            const terrainY = getTerrainHeight(sideChick.position.x, sideChick.position.z);
+            sideChick.position.y = terrainY + 0.3 + Math.abs(Math.sin(now * 0.008)) * 0.2;
+            
+            sideChick.mesh.position.copy(sideChick.position);
+            
+            // Find nearest enemy and shoot
+            let nearestEnemy = null;
+            let nearestDist = 15;
+            
+            enemies.forEach(enemy => {
+                const d = sideChick.position.distanceTo(enemy.position);
+                if (d < nearestDist) {
+                    nearestDist = d;
+                    nearestEnemy = enemy;
+                }
+            });
+            
+            if (nearestEnemy) {
+                // Face enemy
+                const toEnemy = nearestEnemy.position.clone().sub(sideChick.position);
+                sideChick.mesh.rotation.y = Math.atan2(toEnemy.x, toEnemy.z);
+                
+                // Shoot at enemy
+                if (now - sideChick.lastShootTime > sideChick.shootCooldown) {
+                    sideChick.lastShootTime = now;
+                    
+                    const shootDir = toEnemy.normalize();
+                    const start = sideChick.position.clone();
+                    start.y += 0.1;
+                    
+                    // Create tiny projectile
+                    const projGeom = new THREE.SphereGeometry(0.06, 4, 4);
+                    const projMat = new THREE.MeshLambertMaterial({ color: 0xffff00 });
+                    const projMesh = new THREE.Mesh(projGeom, projMat);
+                    projMesh.position.copy(start);
+                    scene.add(projMesh);
+                    
+                    projectiles.push({
+                        mesh: projMesh,
+                        velocity: shootDir.clone().multiplyScalar(0.6),
+                        damage: 10,
+                        lifetime: 100,
+                        fromPlayer: true,
+                        weaponType: 'sideChick'
+                    });
+                }
+            }
         }
 
         function spawnEnemy() {
@@ -4874,7 +5021,7 @@
 
         function updateUI() {
             document.getElementById('kills').textContent = gameState.kills;
-            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('lives').textContent = gameState.lives + (player.shields > 0 ? ` (+${player.shields} shield)` : '');
             document.getElementById('time').textContent = Math.floor(gameState.gameTime);
             document.getElementById('current-weapon').textContent = 
                 gameState.currentWeapon.charAt(0).toUpperCase() + gameState.currentWeapon.slice(1);
@@ -4931,6 +5078,15 @@
                 const div = createShopItemElement(item, owned);
                 weaponsContainer.appendChild(div);
             });
+            
+            // Render extras
+            const extrasContainer = document.getElementById('shop-extras');
+            extrasContainer.innerHTML = '';
+            shopItems.extras.forEach(item => {
+                const owned = (item.id === 'sideChick' && sideChick !== null);
+                const div = createShopItemElement(item, owned);
+                extrasContainer.appendChild(div);
+            });
         }
         
         function createShopItemElement(item, owned = false) {
@@ -4986,6 +5142,19 @@
                         updatePlayerWeapon();
                     }
                     break;
+                    
+                case 'shield':
+                    if (player.shields < 3) {
+                        player.shields++;
+                    }
+                    updateUI();
+                    break;
+                    
+                case 'companion':
+                    if (item.id === 'sideChick' && !sideChick) {
+                        spawnSideChick();
+                    }
+                    break;
             }
             
             renderShopItems();
@@ -4994,6 +5163,28 @@
         
         function handlePlayerDamage(damage) {
             if (player.isInvulnerable) return;
+            
+            // Shield blocks damage
+            if (player.shields > 0) {
+                player.shields--;
+                updateUI();
+                // Shield break visual effect
+                for (let i = 0; i < 8; i++) {
+                    const particle = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.15, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.8 })
+                    );
+                    particle.position.copy(player.position);
+                    scene.add(particle);
+                    const vel = new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.3,
+                        Math.random() * 0.2,
+                        (Math.random() - 0.5) * 0.3
+                    );
+                    bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 20 });
+                }
+                return;
+            }
             
             gameState.lives -= damage;
             updateUI();
@@ -5155,6 +5346,13 @@
             player.wing67Time = 0;
             player.isGliding = false;
             player.maxJumps = characterConfig[gameSettings.character].maxJumps || 2;
+            player.shields = 0;
+            
+            // Remove Side Chick if exists
+            if (sideChick) {
+                scene.remove(sideChick.mesh);
+                sideChick = null;
+            }
             
             // Clear special orbs
             specialOrbs.forEach(orb => scene.remove(orb.mesh));
@@ -5683,6 +5881,7 @@
             updateVehicles(delta);
             updateProjectiles(delta);
             updateGrenades();
+            updateSideChick(delta);
             updateBloodParticles(delta);
             updateWindStreaks(delta);
             updatePickups(delta);
