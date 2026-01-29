@@ -333,70 +333,112 @@
         }
 
         .settings-panel {
-            background: rgba(0,0,0,0.7);
-            padding: 40px;
+            background: rgba(0,0,0,0.85);
+            padding: 30px;
             border-radius: 20px;
-            min-width: 400px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .settings-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .settings-panel::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
         }
 
         .settings-panel h2 {
             color: #FFD700;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 36px;
+            margin-bottom: 20px;
+            font-size: 32px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .setting-row {
             display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .setting-header {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 20px 0;
-            padding: 15px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
+            width: 100%;
         }
 
         .setting-label {
             font-size: 18px;
-            color: white;
+            color: #8FBC8F;
+            font-weight: bold;
         }
 
-        .setting-select {
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: none;
-            background: #4CAF50;
-            color: white;
-            cursor: pointer;
+        .character-btns, .mode-btns, .difficulty-btns, .input-btns {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 8px;
+            width: 100%;
         }
 
-        .difficulty-btns {
-            display: flex;
-            gap: 10px;
-        }
-
-        .diff-btn {
-            padding: 10px 20px;
-            border: 2px solid #666;
-            background: transparent;
-            color: white;
-            border-radius: 8px;
+        .char-btn, .mode-btn, .diff-btn, .input-btn {
+            padding: 8px;
+            font-size: 13px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            color: #ddd;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .diff-btn.active {
-            background: #4CAF50;
-            border-color: #66BB6A;
-        }
-
-        .diff-btn:hover {
+        .char-btn:hover, .mode-btn:hover, .diff-btn:hover, .input-btn:hover {
+            background: rgba(76, 175, 80, 0.2);
             border-color: #4CAF50;
         }
 
-        .input-btns {
+        .char-btn.active, .mode-btn.active, .diff-btn.active, .input-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #66BB6A;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .char-btn.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #222;
+        }
+
+        .char-description {
+            margin-top: 10px;
+            font-style: italic;
+            color: #aaa;
+            font-size: 14px;
+            text-align: center;
+            min-height: 40px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .settings-footer {
+            margin-top: 20px;
             display: flex;
+            justify-content: center;
+        }
             gap: 10px;
         }
 
@@ -958,24 +1000,45 @@
     <!-- Settings Page -->
     <div id="settings-page">
         <div class="settings-panel">
-            <h2>Settings</h2>
+            <h2>Game Settings</h2>
+            
             <div class="setting-row">
-                <span class="setting-label">Difficulty</span>
+                <div class="setting-header">
+                    <span class="setting-label">Difficulty</span>
+                </div>
                 <div class="difficulty-btns">
                     <button class="diff-btn" data-diff="easy">Easy</button>
                     <button class="diff-btn active" data-diff="normal">Normal</button>
                     <button class="diff-btn" data-diff="hard">Hard</button>
                 </div>
             </div>
+
             <div class="setting-row">
-                <span class="setting-label">Input Method</span>
+                <div class="setting-header">
+                    <span class="setting-label">Input Method</span>
+                </div>
                 <div class="input-btns">
                     <button class="input-btn active" data-input="computer">Computer</button>
                     <button class="input-btn" data-input="mobile">Mobile</button>
                 </div>
             </div>
-            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
-                <span class="setting-label" style="margin-bottom: 10px;">Character</span>
+
+            <div class="setting-row">
+                <div class="setting-header">
+                    <span class="setting-label">Game Mode</span>
+                </div>
+                <div class="mode-btns">
+                    <button class="mode-btn active" data-mode="survival">Survival</button>
+                    <button class="mode-btn" data-mode="endless">Endless</button>
+                    <button class="mode-btn" data-mode="bossRush">Boss Rush</button>
+                    <button class="mode-btn" data-mode="timeAttack">Time Attack</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-header">
+                    <span class="setting-label">Character Selection</span>
+                </div>
                 <div class="character-btns">
                     <button class="char-btn active" data-char="duck">Duck</button>
                     <button class="char-btn" data-char="titanTurkey">Titan Turkey</button>
@@ -984,19 +1047,21 @@
                     <button class="char-btn" data-char="chick7">Chick 7</button>
                     <button class="char-btn" data-char="loonatic">Loonatic</button>
                     <button class="char-btn" data-char="eggySurprise">Eggy Surprise</button>
-                    <button class="char-btn locked" data-char="goldenDuck">Golden Duck (Shop)</button>
-                    <button class="char-btn locked" data-char="phoenixFowl">Phoenix Fowl (Shop)</button>
-                    <button class="char-btn locked" data-char="robotRooster">Robot Rooster (Shop)</button>
-                    <button class="char-btn locked" data-char="poultrygeist">Poultrygeist (Shop)</button>
-                    <button class="char-btn locked" data-char="duckNorris">Duck Norris (Shop)</button>
-                    <button class="char-btn locked" data-char="quackula">Quackula (Shop)</button>
+                    <button class="char-btn locked" data-char="goldenDuck">Golden Duck</button>
+                    <button class="char-btn locked" data-char="phoenixFowl">Phoenix Fowl</button>
+                    <button class="char-btn locked" data-char="robotRooster">Robot Rooster</button>
+                    <button class="char-btn locked" data-char="poultrygeist">Poultrygeist</button>
+                    <button class="char-btn locked" data-char="duckNorris">Duck Norris</button>
+                    <button class="char-btn locked" data-char="quackula">Quackula</button>
                 </div>
                 <div class="char-description" id="char-description">Classic yellow duck - balanced gameplay</div>
             </div>
-            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
-                <span class="setting-label" style="margin-bottom: 10px;">Game Mode</span>
-                <div class="mode-btns">
-                    <button class="mode-btn active" data-mode="survival">Survival</button>
+
+            <div class="settings-footer">
+                <button class="back-btn" id="settings-back-btn">BACK TO MENU</button>
+            </div>
+        </div>
+    </div>
                     <button class="mode-btn" data-mode="endless">Endless Horde</button>
                     <button class="mode-btn" data-mode="bossRush">Boss Rush</button>
                     <button class="mode-btn" data-mode="timeAttack">Time Attack</button>
