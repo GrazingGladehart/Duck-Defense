@@ -25,6 +25,7 @@ I prefer iterative development, with clear communication before major changes.
     - Starting pistol, with additional weapons dropping from slain hunters (25% chance).
     - Purchased weapons expand the loot pool.
     - Weapons despawn after 30 seconds.
+    - Special weapon types: Flamethrower (stream particles), Tesla Coil (chain lightning jumps between enemies), Boomerang (returns to player).
 - **Stat Upgrades**: Permanent, stackable upgrades like Speed Boost, Quick Draw, Jump Height, and Lucky Feather, persisting across games.
 - **Coin System & Shop**:
     - Earn coins from defeating hunters.
