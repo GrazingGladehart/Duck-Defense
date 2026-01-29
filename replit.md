@@ -44,12 +44,17 @@ The game features a full menu system:
 - **Improved Hitboxes**: Sword has 1.3x range multiplier for better arc coverage
 
 ### Weapons
-Weapons are now dropped by slain hunters (20% drop chance) instead of spawning randomly!
-- **Fists** - Basic melee
-- **Sword** - Enhanced with decorative crossguard, pommel, and blade edge. Wide sweeping attacks
-- **Hammer** - Larger head, longer handle, vertical chopping animation
-- **Rifle** - Standard ranged weapon
-- **Machine Gun** - Rapid fire
+- **Pistol** - Default starting weapon, weak but reliable ranged weapon
+- Weapons drop from slain hunters (25% chance) based on your available weapon pool
+- Purchased weapons from the shop add to your loot drop possibilities
+- Weapon pickups despawn after 30 seconds (fade out warning in last 5 seconds)
+
+**Available Weapons:**
+- **Pistol** - Weak starting ranged weapon (15 damage)
+- **Sword** - Enhanced melee with decorative crossguard. Wide sweeping attacks
+- **Hammer** - Heavy melee with vertical chopping animation
+- **Rifle** - Standard ranged weapon (80 damage)
+- **Machine Gun** - Rapid fire ranged weapon
 - **Catapult** - Fires large orange projectiles that pierce through multiple enemies
 - **Cannon** - Most powerful weapon with massive piercing projectiles
 
@@ -163,6 +168,12 @@ Each character has unique colors, features, a primary ability (Q key), and a spe
 The game runs on port 5000 via Python's built-in HTTP server. No build process or dependencies are required.
 
 ## Recent Changes
+- **2026-01-29**: Weapon loot system overhaul
+  - Added weak pistol as default starting weapon
+  - Weapons only drop from slain hunters (25% chance)
+  - Dropped weapons are randomly selected from the player's available pool
+  - Purchased weapons from shop add to the loot drop possibilities
+  - Weapon pickups despawn after 30 seconds with fade-out warning
 - **2026-01-27**: Tanks and grenades
   - Added tanks that spawn after 6 minutes with armored drivers
   - Tanks have 300 health and fire explosive shells at players
