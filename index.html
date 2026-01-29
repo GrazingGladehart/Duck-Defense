@@ -1232,7 +1232,29 @@
         // ==================== STATS SYSTEM ====================
         function loadAllStats() {
             const saved = localStorage.getItem('duckDefenseStats');
-            return saved ? JSON.parse(saved) : { games: [], totalKills: 0, totalTime: 0, totalVehicleTime: 0, weaponKills: {} };
+            const defaultStats = {
+                highScore: 0,
+                totalKills: 0,
+                totalTime: 0,
+                totalVehicleTime: 0,
+                weaponKills: {},
+                games: [],
+                coins: 0,
+                unlockedCharacters: ['duck', 'titanTurkey', 'kungPowChicken', 'mericaMallard', 'chick7', 'loonatic', 'eggySurprise'],
+                unlockedWeapons: ['pistol'],
+                upgrades: {
+                    speed: 0,
+                    attackSpeed: 0,
+                    jumpHeight: 0,
+                    luck: 0
+                }
+            };
+            if (!saved) return defaultStats;
+            const stats = JSON.parse(saved);
+            if (!stats.unlockedWeapons) stats.unlockedWeapons = ['pistol'];
+            if (!stats.unlockedCharacters) stats.unlockedCharacters = defaultStats.unlockedCharacters;
+            if (!stats.upgrades) stats.upgrades = defaultStats.upgrades;
+            return { ...defaultStats, ...stats };
         }
         
         function saveAllStats() {
@@ -3518,9 +3540,13 @@
             awardCoins(coinReward);
             
             // Drop chance based on luck stat (25% base * luck multiplier)
-            if (Math.random() < 0.25 * playerStats.luck && sessionWeapons.length > 0) {
-                const droppedWeapon = sessionWeapons[Math.floor(Math.random() * sessionWeapons.length)];
-                createPickup(droppedWeapon, enemy.position.clone());
+            if (Math.random() < 0.25 * playerStats.luck) {
+                // Drop from all possible weapons (excluding current) or a curated list
+                const possibleDrops = Object.keys(weapons).filter(w => w !== 'pistol');
+                if (possibleDrops.length > 0) {
+                    const droppedWeapon = possibleDrops[Math.floor(Math.random() * possibleDrops.length)];
+                    createPickup(droppedWeapon, enemy.position.clone());
+                }
             }
             
             updateUI();
@@ -6035,6 +6061,12 @@
                         sessionWeapons.push(item.weaponId);
                         gameState.currentWeapon = item.weaponId;
                         updatePlayerWeapon();
+                        
+                        // Save permanent unlock
+                        if (!allTimeStats.unlockedWeapons.includes(item.weaponId)) {
+                            allTimeStats.unlockedWeapons.push(item.weaponId);
+                            saveAllStats();
+                        }
                     }
                     break;
                     
@@ -6451,8 +6483,8 @@
             document.getElementById('shop-btn').style.display = 'block';
             document.getElementById('coins-display').style.display = 'block';
             
-            // Reset session weapons
-            sessionWeapons = ['pistol'];
+            // Apply permanent weapon unlocks
+            sessionWeapons = [...allTimeStats.unlockedWeapons];
             
             // Apply difficulty settings
             const diff = difficultyConfig[gameSettings.difficulty];
