@@ -461,6 +461,53 @@
             font-style: italic;
         }
 
+        .mode-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            background: #2a2a4a;
+            border: 2px solid #555;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            border-color: #00ff88;
+            background: #3a3a6a;
+        }
+
+        .mode-btn:hover {
+            border-color: #88ff88;
+        }
+
+        .player-stats-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .stat-item {
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .stat-item span {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
         #ability-bar {
             position: absolute;
             bottom: 80px;
@@ -865,6 +912,8 @@
         <div class="shop-section">
             <h3>Extras</h3>
             <div class="shop-items" id="shop-extras"></div>
+            <h3>Stat Upgrades (Permanent)</h3>
+            <div class="shop-items" id="shop-stats"></div>
         </div>
 
         <button class="shop-back-btn" onclick="closeShop()">Back to Game</button>
@@ -938,8 +987,28 @@
                     <button class="char-btn locked" data-char="phoenixFowl">Phoenix Fowl (Shop)</button>
                     <button class="char-btn locked" data-char="robotRooster">Robot Rooster (Shop)</button>
                     <button class="char-btn locked" data-char="poultrygeist">Poultrygeist (Shop)</button>
+                    <button class="char-btn locked" data-char="duckNorris">Duck Norris (Shop)</button>
+                    <button class="char-btn locked" data-char="quackula">Quackula (Shop)</button>
                 </div>
                 <div class="char-description" id="char-description">Classic yellow duck - balanced gameplay</div>
+            </div>
+            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <span class="setting-label" style="margin-bottom: 10px;">Game Mode</span>
+                <div class="mode-btns">
+                    <button class="mode-btn active" data-mode="survival">Survival</button>
+                    <button class="mode-btn" data-mode="endless">Endless Horde</button>
+                    <button class="mode-btn" data-mode="bossRush">Boss Rush</button>
+                    <button class="mode-btn" data-mode="timeAttack">Time Attack</button>
+                </div>
+            </div>
+            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <span class="setting-label" style="margin-bottom: 10px;">Your Stats (from Shop Upgrades)</span>
+                <div class="player-stats-display" id="player-stats-display">
+                    <div class="stat-item">Speed: <span id="stat-speed">100%</span></div>
+                    <div class="stat-item">Attack Speed: <span id="stat-attack">100%</span></div>
+                    <div class="stat-item">Jump Height: <span id="stat-jump">100%</span></div>
+                    <div class="stat-item">Luck: <span id="stat-luck">100%</span></div>
+                </div>
             </div>
             <button class="back-btn" id="settings-back-btn">BACK TO MENU</button>
         </div>
@@ -973,6 +1042,7 @@
         const defaultSettings = {
             difficulty: 'normal',
             inputMethod: 'computer',
+            gameMode: 'survival',
             character: 'duck'
         };
         
@@ -1111,6 +1181,32 @@
                 orbColor: 0x88FFFF,
                 maxJumps: 3,
                 isGhost: true
+            },
+            duckNorris: {
+                name: 'Duck Norris',
+                description: 'Martial arts legend - devastating roundhouse kicks!',
+                colors: { body: 0xD2691E, head: 0xDEB887, beak: 0xFF8C00, wing: 0x8B4513 },
+                ability: 'roundhouseKick',
+                abilityCooldown: 5000,
+                abilityDuration: 0,
+                special: 'chuckFlurry',
+                specialName: 'Chuck Flurry',
+                orbColor: 0xFF4500,
+                maxJumps: 3,
+                meleeDamageBonus: 1.5
+            },
+            quackula: {
+                name: 'Quackula',
+                description: 'Vampire duck - drain life from your enemies!',
+                colors: { body: 0x1a1a2e, head: 0x16213e, beak: 0x8B0000, wing: 0x0f3460 },
+                ability: 'bloodDrain',
+                abilityCooldown: 10000,
+                abilityDuration: 5000,
+                special: 'batSwarm',
+                specialName: 'Bat Swarm',
+                orbColor: 0x8B0000,
+                maxJumps: 3,
+                lifesteal: 0.15
             }
         };
         
@@ -1223,7 +1319,9 @@
                 { id: 'goldenDuck', name: 'Golden Duck', description: 'Shiny golden duck - earn 2x coins!', price: 500, type: 'character', unlockId: 'goldenDuck' },
                 { id: 'phoenixFowl', name: 'Phoenix Fowl', description: 'Fiery bird - immune to explosions!', price: 750, type: 'character', unlockId: 'phoenixFowl' },
                 { id: 'robotRooster', name: 'Robot Rooster', description: 'Mechanical menace - faster attack speed!', price: 1000, type: 'character', unlockId: 'robotRooster' },
-                { id: 'poultrygeist', name: 'Poultrygeist', description: 'Spectral ghost bird - summon a clone!', price: 850, type: 'character', unlockId: 'poultrygeist' }
+                { id: 'poultrygeist', name: 'Poultrygeist', description: 'Spectral ghost bird - summon a clone!', price: 850, type: 'character', unlockId: 'poultrygeist' },
+                { id: 'duckNorris', name: 'Duck Norris', description: 'Martial arts master - roundhouse kicks!', price: 900, type: 'character', unlockId: 'duckNorris' },
+                { id: 'quackula', name: 'Quackula', description: 'Vampire duck - lifesteal on hits!', price: 1200, type: 'character', unlockId: 'quackula' }
             ],
             weapons: [
                 { id: 'buySword', name: 'Sword', description: 'Unlock sword for this game', price: 30, type: 'weapon', weaponId: 'sword' },
@@ -1231,12 +1329,35 @@
                 { id: 'buyRifle', name: 'Rifle', description: 'Unlock rifle for this game', price: 60, type: 'weapon', weaponId: 'rifle' },
                 { id: 'buyMachineGun', name: 'Machine Gun', description: 'Unlock machine gun for this game', price: 80, type: 'weapon', weaponId: 'machineGun' },
                 { id: 'buyCatapult', name: 'Catapult', description: 'Unlock catapult for this game', price: 100, type: 'weapon', weaponId: 'catapult' },
-                { id: 'buyCannon', name: 'Cannon', description: 'Unlock cannon for this game', price: 150, type: 'weapon', weaponId: 'cannon' }
+                { id: 'buyCannon', name: 'Cannon', description: 'Unlock cannon for this game', price: 150, type: 'weapon', weaponId: 'cannon' },
+                { id: 'buyFlamethrower', name: 'Flamethrower', description: 'Continuous fire stream that ignites enemies', price: 200, type: 'weapon', weaponId: 'flamethrower' },
+                { id: 'buyLightning', name: 'Tesla Coil', description: 'Chain lightning that jumps between enemies', price: 250, type: 'weapon', weaponId: 'lightning' },
+                { id: 'buyBoomerang', name: 'Boomerang', description: 'Returns to you, hitting enemies twice', price: 120, type: 'weapon', weaponId: 'boomerang' }
             ],
             extras: [
                 { id: 'sideChick', name: 'Side Chick', description: 'A tiny pistol-wielding companion that fights at your side!', price: 200, type: 'companion' }
+            ],
+            statBuffs: [
+                { id: 'speedUp', name: 'Speed Boost', description: '+10% movement speed (permanent)', price: 300, type: 'statBuff', stat: 'speed', amount: 0.1 },
+                { id: 'attackSpeedUp', name: 'Quick Draw', description: '+10% attack speed (permanent)', price: 350, type: 'statBuff', stat: 'attackSpeed', amount: 0.1 },
+                { id: 'jumpUp', name: 'Spring Legs', description: '+15% jump height (permanent)', price: 250, type: 'statBuff', stat: 'jumpHeight', amount: 0.15 },
+                { id: 'luckUp', name: 'Lucky Feather', description: '+10% better drop rates (permanent)', price: 400, type: 'statBuff', stat: 'luck', amount: 0.1 }
             ]
         };
+        
+        // Persistent stat buffs
+        let playerStats = {
+            speed: 1.0,
+            attackSpeed: 1.0,
+            jumpHeight: 1.0,
+            luck: 1.0
+        };
+        const savedStats = localStorage.getItem('duckDefensePlayerStats');
+        if (savedStats) playerStats = JSON.parse(savedStats);
+        
+        function savePlayerStats() {
+            localStorage.setItem('duckDefensePlayerStats', JSON.stringify(playerStats));
+        }
         
         // Companion state
         let sideChick = null;
@@ -1259,7 +1380,10 @@
             rifle: { damage: 80, range: 100, cooldown: 600, type: 'projectile', speed: 1.2 },
             machineGun: { damage: 50, range: 20, cooldown: 150, type: 'projectile', speed: 1.0 },
             catapult: { damage: 60, range: 40, cooldown: 1500, type: 'arc', speed: 0.3 },
-            cannon: { damage: 100, range: 50, cooldown: 2000, type: 'projectile', speed: 0.5, aoe: 5 }
+            cannon: { damage: 100, range: 50, cooldown: 2000, type: 'projectile', speed: 0.5, aoe: 5 },
+            flamethrower: { damage: 8, range: 12, cooldown: 50, type: 'stream', speed: 0.4, burnDamage: 5 },
+            lightning: { damage: 45, range: 20, cooldown: 800, type: 'chain', speed: 2.0, chainCount: 3 },
+            boomerang: { damage: 35, range: 25, cooldown: 1200, type: 'returning', speed: 0.5 }
         };
 
         // ==================== SCENE SETUP ====================
@@ -2161,6 +2285,89 @@
                     link.rotation.y = Math.PI / 2;
                     bird.add(link);
                 }
+            }
+            
+            if (charType === 'duckNorris') {
+                // Muscular martial artist duck
+                body.scale.set(1.1, 1.2, 1.1);
+                
+                // Red headband
+                const headbandGeom = new THREE.TorusGeometry(0.35, 0.04, 6, 16);
+                const headbandMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+                const headband = new THREE.Mesh(headbandGeom, headbandMat);
+                headband.position.set(0, 1.0, 0);
+                headband.rotation.x = Math.PI / 2;
+                bird.add(headband);
+                
+                // Headband tails
+                const tailMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+                [-0.3, -0.35].forEach((y, i) => {
+                    const tail = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.08, 0.25, 0.02),
+                        tailMat
+                    );
+                    tail.position.set(-0.35, 0.9 + y, -0.1 - i * 0.05);
+                    tail.rotation.z = 0.3;
+                    bird.add(tail);
+                });
+                
+                // Muscular arms (bigger wings)
+                leftWing.scale.set(1.3, 1.5, 1.2);
+                rightWing.scale.set(1.3, 1.5, 1.2);
+                
+                // Tough expression - thicker brow
+                const browGeom = new THREE.BoxGeometry(0.35, 0.06, 0.1);
+                const browMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                const brow = new THREE.Mesh(browGeom, browMat);
+                brow.position.set(0, 1.0, 0.32);
+                bird.add(brow);
+            }
+            
+            if (charType === 'quackula') {
+                // Vampire duck - dark and mysterious
+                leftEye.material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+                rightEye.material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+                
+                // Vampire cape
+                const capeGeom = new THREE.ConeGeometry(0.8, 1.5, 8, 1, true);
+                const capeMat = new THREE.MeshLambertMaterial({ 
+                    color: 0x1a0a2e, 
+                    side: THREE.DoubleSide 
+                });
+                const cape = new THREE.Mesh(capeGeom, capeMat);
+                cape.position.set(0, 0, -0.3);
+                cape.rotation.x = -0.2;
+                bird.add(cape);
+                
+                // Cape collar (high collar)
+                const collarGeom = new THREE.BoxGeometry(0.8, 0.4, 0.1);
+                const collarMat = new THREE.MeshLambertMaterial({ color: 0x4a0a4e });
+                const collar = new THREE.Mesh(collarGeom, collarMat);
+                collar.position.set(0, 0.5, -0.35);
+                collar.rotation.x = -0.4;
+                bird.add(collar);
+                
+                // Fangs
+                const fangMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                [-0.06, 0.06].forEach(x => {
+                    const fang = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.03, 0.1, 4),
+                        fangMat
+                    );
+                    fang.position.set(x, 0.65, 0.35);
+                    fang.rotation.x = Math.PI;
+                    bird.add(fang);
+                });
+                
+                // Slicked back hair/feathers
+                const hairMat = new THREE.MeshLambertMaterial({ color: 0x0a0a1e });
+                const hair = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.35, 8, 8),
+                    hairMat
+                );
+                hair.position.set(0, 1.0, -0.15);
+                hair.scale.set(1.2, 0.6, 1.5);
+                bird.add(hair);
             }
             
             return bird;
@@ -3150,11 +3357,19 @@
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
-            // Determine enemy type based on game time
+            // Determine enemy type based on game time and mode
             let enemyType = 'basic';
             const gameMinutes = gameState.gameTime / 60;
             
-            if (gameMinutes >= 4) {
+            // Boss Rush mode: mostly hulks
+            if (gameSettings.gameMode === 'bossRush') {
+                const roll = Math.random();
+                if (roll < 0.5) {
+                    enemyType = 'hulk';
+                } else if (roll < 0.8) {
+                    enemyType = 'catapult';
+                }
+            } else if (gameMinutes >= 4) {
                 // After 4 minutes: can spawn hulk hunters (20% chance)
                 const roll = Math.random();
                 if (roll < 0.2) {
@@ -3297,8 +3512,8 @@
             const coinReward = enemy.type === 'hulk' ? 15 : (enemy.type === 'catapult' ? 10 : 5);
             awardCoins(coinReward);
             
-            // 25% chance to drop a weapon from the player's available pool
-            if (Math.random() < 0.25 && sessionWeapons.length > 0) {
+            // Drop chance based on luck stat (25% base * luck multiplier)
+            if (Math.random() < 0.25 * playerStats.luck && sessionWeapons.length > 0) {
                 const droppedWeapon = sessionWeapons[Math.floor(Math.random() * sessionWeapons.length)];
                 createPickup(droppedWeapon, enemy.position.clone());
             }
@@ -3569,7 +3784,88 @@
                 case 'doppelgangerDuo':
                     executeDoppelgangerDuo();
                     break;
+                case 'chuckFlurry':
+                    executeChuckFlurry();
+                    break;
+                case 'batSwarm':
+                    executeBatSwarm();
+                    break;
             }
+        }
+        
+        function executeChuckFlurry() {
+            // Rapid flurry of roundhouse kicks in all directions
+            player.specialActive = true;
+            player.specialEndTime = Date.now() + 3000;
+            
+            let kickCount = 0;
+            const flurryInterval = setInterval(() => {
+                kickCount++;
+                
+                // Create kick wave
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2 + kickCount * 0.5;
+                    const particle = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.3, 0.15, 0.15),
+                        new THREE.MeshBasicMaterial({ color: 0xFF6600 })
+                    );
+                    particle.position.copy(player.position);
+                    particle.position.x += Math.cos(angle) * 3;
+                    particle.position.y += 0.5;
+                    particle.position.z += Math.sin(angle) * 3;
+                    scene.add(particle);
+                    
+                    const vel = new THREE.Vector3(Math.cos(angle) * 0.4, 0.15, Math.sin(angle) * 0.4);
+                    bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 15 });
+                }
+                
+                // Damage enemies
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const dist = player.position.distanceTo(enemy.position);
+                    if (dist < 8) {
+                        enemy.health -= 40;
+                        if (enemy.health <= 0) {
+                            handleEnemyDeath(enemy, i, 'chuckFlurry');
+                        }
+                    }
+                }
+                
+                if (kickCount >= 6) {
+                    clearInterval(flurryInterval);
+                    player.specialActive = false;
+                }
+            }, 400);
+        }
+        
+        function executeBatSwarm() {
+            // Release a swarm of bats that seek enemies
+            player.specialActive = true;
+            player.specialEndTime = Date.now() + 5000;
+            
+            // Create bat projectiles
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                const batGeom = new THREE.ConeGeometry(0.15, 0.3, 4);
+                const batMat = new THREE.MeshLambertMaterial({ color: 0x1a1a2e });
+                const bat = new THREE.Mesh(batGeom, batMat);
+                bat.position.copy(player.position);
+                bat.position.y += 1;
+                bat.rotation.x = Math.PI / 2;
+                scene.add(bat);
+                
+                projectiles.push({
+                    mesh: bat,
+                    velocity: new THREE.Vector3(Math.cos(angle) * 0.3, 0.1, Math.sin(angle) * 0.3),
+                    damage: 30,
+                    lifetime: 150,
+                    fromPlayer: true,
+                    weaponType: 'batSwarm',
+                    seeking: true
+                });
+            }
+            
+            player.specialActive = false;
         }
 
         function executeDoppelgangerDuo() {
@@ -4212,7 +4508,7 @@
 
             // Get speed modifier based on terrain
             const speedModifier = getSpeedModifier(player.position);
-            const moveSpeed = baseSpeed * speedModifier;
+            const moveSpeed = baseSpeed * speedModifier * playerStats.speed;
 
             // Store old position for collision rollback
             const oldPosition = player.position.clone();
@@ -4243,7 +4539,7 @@
             // Multi-jump with wing flapping (character-specific jump count)
             if (keys[' '] && player.jumpsUsed < player.maxJumps) {
                 if (!player.lastJumpKey) {
-                    player.velocity.y = jumpForce;
+                    player.velocity.y = jumpForce * playerStats.jumpHeight;
                     player.jumpsUsed++;
                     player.isJumping = true;
                     player.wingFlapTime = 10; // Wing flap duration
@@ -4399,6 +4695,8 @@
                 // Robot Rooster has 50% faster attacks (attackSpeedMultiplier = 0.5)
                 const charConfig = characterConfig[gameSettings.character];
                 let effectiveCooldown = weapon.cooldown;
+                // Apply player stat attack speed buff
+                effectiveCooldown /= playerStats.attackSpeed;
                 if (charConfig.attackSpeedMultiplier) {
                     effectiveCooldown *= charConfig.attackSpeedMultiplier;
                 }
@@ -4449,9 +4747,59 @@
                 // Haunt attack - possess and damage nearby enemies
                 executeHauntAttack();
                 player.abilityActive = false;
+            } else if (charType === 'duckNorris') {
+                // Roundhouse kick - instant devastating attack
+                executeRoundhouseKick();
+                player.abilityActive = false;
+            } else if (charType === 'quackula') {
+                // Blood Drain - lifesteal mode for duration
+                player.bloodDrainActive = true;
             }
             
             updateAbilityUI();
+        }
+        
+        function executeRoundhouseKick() {
+            const kickRadius = 6;
+            const kickDamage = 120;
+            
+            // Spinning kick animation
+            player.velocity.y = 0.2;
+            
+            // Create spinning kick effect
+            for (let i = 0; i < 20; i++) {
+                const angle = (i / 20) * Math.PI * 2;
+                const particle = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.2, 0.1, 0.1),
+                    new THREE.MeshBasicMaterial({ color: 0xFF4500 })
+                );
+                particle.position.copy(player.position);
+                particle.position.x += Math.cos(angle) * 2;
+                particle.position.y += 0.5;
+                particle.position.z += Math.sin(angle) * 2;
+                scene.add(particle);
+                
+                const vel = new THREE.Vector3(Math.cos(angle) * 0.3, 0.1, Math.sin(angle) * 0.3);
+                bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 25 });
+            }
+            
+            // Damage all enemies in range
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const dist = player.position.distanceTo(enemy.position);
+                if (dist < kickRadius) {
+                    enemy.health -= kickDamage;
+                    
+                    // Knockback
+                    const knockDir = enemy.position.clone().sub(player.position).normalize();
+                    enemy.position.add(knockDir.multiplyScalar(4));
+                    enemy.mesh.position.copy(enemy.position);
+                    
+                    if (enemy.health <= 0) {
+                        handleEnemyDeath(enemy, i, 'roundhouseKick');
+                    }
+                }
+            }
         }
         
         function executeHauntAttack() {
@@ -4609,6 +4957,9 @@
                         player.mesh.userData.helmet.visible = false;
                         player.mesh.userData.facemask.visible = false;
                     }
+                }
+                if (charType === 'quackula') {
+                    player.bloodDrainActive = false;
                 }
             }
             
@@ -4770,6 +5121,75 @@
             const start = player.position.clone();
             start.y += 1;
             
+            // Handle special weapon types
+            if (weapon.type === 'stream') {
+                // Flamethrower - create flame particle stream
+                const flameGeom = new THREE.SphereGeometry(0.15, 4, 4);
+                const flameMat = new THREE.MeshBasicMaterial({ color: 0xFF4400 });
+                const flame = new THREE.Mesh(flameGeom, flameMat);
+                flame.position.copy(start);
+                scene.add(flame);
+                
+                projectiles.push({
+                    mesh: flame,
+                    velocity: direction.clone().multiplyScalar(weapon.speed),
+                    damage: weapon.damage,
+                    lifetime: 30,
+                    fromPlayer: true,
+                    weaponType: gameState.currentWeapon,
+                    isFlame: true,
+                    burnDamage: weapon.burnDamage
+                });
+                return;
+            }
+            
+            if (weapon.type === 'chain') {
+                // Tesla coil - lightning bolt that chains
+                const boltGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 4);
+                const boltMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF });
+                const bolt = new THREE.Mesh(boltGeom, boltMat);
+                bolt.position.copy(start);
+                bolt.rotation.x = Math.PI / 2;
+                scene.add(bolt);
+                
+                projectiles.push({
+                    mesh: bolt,
+                    velocity: direction.clone().multiplyScalar(weapon.speed),
+                    damage: weapon.damage,
+                    lifetime: 50,
+                    fromPlayer: true,
+                    weaponType: gameState.currentWeapon,
+                    isChain: true,
+                    chainCount: weapon.chainCount,
+                    hitEnemies: []
+                });
+                return;
+            }
+            
+            if (weapon.type === 'returning') {
+                // Boomerang - comes back to player
+                const boomGeom = new THREE.TorusGeometry(0.2, 0.05, 4, 6);
+                const boomMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                const boom = new THREE.Mesh(boomGeom, boomMat);
+                boom.position.copy(start);
+                scene.add(boom);
+                
+                projectiles.push({
+                    mesh: boom,
+                    velocity: direction.clone().multiplyScalar(weapon.speed),
+                    damage: weapon.damage,
+                    lifetime: 150,
+                    fromPlayer: true,
+                    weaponType: gameState.currentWeapon,
+                    isBoomerang: true,
+                    returning: false,
+                    travelDistance: 0,
+                    maxDistance: weapon.range,
+                    hitEnemies: []
+                });
+                return;
+            }
+            
             createProjectile(start, direction, weapon, true, gameState.currentWeapon);
         }
 
@@ -4890,11 +5310,25 @@
                 }
             });
 
-            // Spawn enemies
-            if (now - gameState.lastSpawnTime > gameState.enemySpawnRate) {
+            // Spawn enemies based on game mode
+            let spawnRateModifier = 1.0;
+            if (gameSettings.gameMode === 'endless') {
+                spawnRateModifier = 0.6; // 40% faster spawns
+            } else if (gameSettings.gameMode === 'bossRush') {
+                spawnRateModifier = 2.0; // Slower spawns, but spawn hulks more often
+            } else if (gameSettings.gameMode === 'timeAttack') {
+                spawnRateModifier = 0.5; // Double spawn rate for time attack
+            }
+            
+            if (now - gameState.lastSpawnTime > gameState.enemySpawnRate * spawnRateModifier) {
                 gameState.lastSpawnTime = now;
                 spawnEnemy();
                 gameState.enemySpawnRate = Math.max(1000, gameState.enemySpawnRate - 50);
+            }
+            
+            // Time Attack mode: 3 minute timer
+            if (gameSettings.gameMode === 'timeAttack' && gameState.gameTime >= 180 && !gameState.isGameOver) {
+                triggerGameOver();
             }
             
             // Spawn trucks occasionally (every 15-25 seconds)
@@ -5115,10 +5549,48 @@
 
             if (dist < hitRadius && !alreadyHit) {
             enemy.health -= proj.damage;
+            
+            // Quackula lifesteal
+            const charConfig = characterConfig[gameSettings.character];
+            if (charConfig.lifesteal && proj.fromPlayer) {
+                const healAmount = Math.floor(proj.damage * charConfig.lifesteal);
+                if (healAmount > 0 && gameState.lives < 3) {
+                    gameState.lives = Math.min(3, gameState.lives + healAmount / 50);
+                }
+            }
+            
+            // Blood drain ability bonus lifesteal
+            if (player.bloodDrainActive && proj.fromPlayer) {
+                gameState.lives = Math.min(3, gameState.lives + proj.damage / 100);
+            }
 
 
             if (proj.canPierce) {
             proj.hitEnemies.push(enemy);
+            }
+            
+            // Chain lightning - jump to nearby enemy
+            if (proj.isChain && proj.chainCount > 0) {
+                let nearestEnemy = null;
+                let nearestDist = 10;
+                enemies.forEach(e => {
+                    if (e !== enemy && !proj.hitEnemies.includes(e)) {
+                        const d = enemy.position.distanceTo(e.position);
+                        if (d < nearestDist) {
+                            nearestDist = d;
+                            nearestEnemy = e;
+                        }
+                    }
+                });
+                
+                if (nearestEnemy) {
+                    // Create chain bolt to next enemy
+                    const chainDir = nearestEnemy.position.clone().sub(proj.mesh.position).normalize();
+                    proj.velocity = chainDir.multiplyScalar(2.0);
+                    proj.chainCount--;
+                    proj.hitEnemies.push(enemy);
+                    proj.lifetime = 30;
+                }
             }
 
 
@@ -5147,6 +5619,32 @@
                 
                 if (proj.isArc) {
                     proj.velocity.y -= 0.015;
+                }
+                
+                // Boomerang behavior
+                if (proj.isBoomerang) {
+                    proj.travelDistance += proj.velocity.length();
+                    proj.mesh.rotation.y += 0.3; // Spin
+                    
+                    if (!proj.returning && proj.travelDistance > proj.maxDistance) {
+                        proj.returning = true;
+                    }
+                    
+                    if (proj.returning) {
+                        // Return to player
+                        const toPlayer = player.position.clone().sub(proj.mesh.position).normalize();
+                        proj.velocity.lerp(toPlayer.multiplyScalar(0.6), 0.15);
+                        
+                        // Check if reached player
+                        if (proj.mesh.position.distanceTo(player.position) < 2) {
+                            proj.lifetime = 0;
+                        }
+                    }
+                }
+                
+                // Flame particles
+                if (proj.isFlame) {
+                    proj.mesh.scale.multiplyScalar(0.95); // Shrink over time
                 }
                 
                 proj.mesh.position.add(proj.velocity);
@@ -5469,6 +5967,16 @@
                 const div = createShopItemElement(item, owned);
                 extrasContainer.appendChild(div);
             });
+            
+            // Render stat buffs
+            const statsContainer = document.getElementById('shop-stats');
+            if (statsContainer) {
+                statsContainer.innerHTML = '';
+                shopItems.statBuffs.forEach(item => {
+                    const div = createShopItemElement(item, false);
+                    statsContainer.appendChild(div);
+                });
+            }
         }
         
         function createShopItemElement(item, owned = false) {
@@ -5537,10 +6045,28 @@
                         spawnSideChick();
                     }
                     break;
+                    
+                case 'statBuff':
+                    playerStats[item.stat] += item.amount;
+                    savePlayerStats();
+                    updateStatsDisplay();
+                    break;
             }
             
             renderShopItems();
             updateUI();
+        }
+        
+        function updateStatsDisplay() {
+            const speedEl = document.getElementById('stat-speed');
+            const attackEl = document.getElementById('stat-attack');
+            const jumpEl = document.getElementById('stat-jump');
+            const luckEl = document.getElementById('stat-luck');
+            
+            if (speedEl) speedEl.textContent = Math.round(playerStats.speed * 100) + '%';
+            if (attackEl) attackEl.textContent = Math.round(playerStats.attackSpeed * 100) + '%';
+            if (jumpEl) jumpEl.textContent = Math.round(playerStats.jumpHeight * 100) + '%';
+            if (luckEl) luckEl.textContent = Math.round(playerStats.luck * 100) + '%';
         }
         
         function handlePlayerDamage(damage) {
@@ -6165,6 +6691,19 @@
                 saveSettings();
             });
         });
+        
+        // Game mode buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameSettings.gameMode = btn.dataset.mode;
+                saveSettings();
+            });
+        });
+        
+        // Initialize stats display
+        updateStatsDisplay();
         
         // Update locked status of character buttons
         function updateCharacterButtons() {
