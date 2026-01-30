@@ -1297,7 +1297,7 @@
             },
             kungPowChicken: {
                 name: 'Kung Pow Chicken',
-                description: 'Martial Arts (Q) + Ninja Vanish special! Agile - 4 jumps!',
+                description: 'Quack Fu (spinning kicks & wing chops) with every attack! Agile - 4 jumps!',
                 colors: { body: 0xFFFFFF, head: 0xFFFFFF, beak: 0xFFCC00, wing: 0xEEEEEE },
                 ability: 'martialArts',
                 abilityCooldown: 8000,
@@ -5466,14 +5466,8 @@
             const config = characterConfig[charType];
             const now = Date.now();
             
-            if (player.abilityActive && charType === 'kungPowChicken') {
-                const now = Date.now();
-                if (now - (player.lastMartialArtTime || 0) > 400) {
-                    player.lastMartialArtTime = now;
-                    performKarateAttack();
-                }
-            }
-
+            // Removed old Kung Pow Chicken auto-attack loop
+            
             const abilityBar = document.getElementById('ability-bar');
             const abilityPrompt = document.getElementById('ability-prompt');
             
@@ -5591,6 +5585,10 @@
 
         function meleeAttack() {
             const charType = gameSettings.character;
+            if (charType === 'kungPowChicken') {
+                performKarateAttack();
+            }
+
             const weapon = weapons[gameState.currentWeapon];
             const attackDir = new THREE.Vector3(
                 -Math.sin(player.lookAngle),
@@ -5661,6 +5659,11 @@
         }
 
         function shootProjectile() {
+            const charType = gameSettings.character;
+            if (charType === 'kungPowChicken') {
+                performKarateAttack();
+            }
+
             const weapon = weapons[gameState.currentWeapon];
             const direction = new THREE.Vector3(
                 -Math.sin(player.lookAngle),
