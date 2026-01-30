@@ -1200,6 +1200,15 @@
                 <div class="char-description" id="char-description">Classic yellow duck - balanced gameplay</div>
             </div>
 
+            <div class="setting-row">
+                <div class="setting-header">
+                    <span class="setting-label">Companion Upgrades</span>
+                </div>
+                <div class="upgrade-toggles" id="upgrade-toggles" style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <!-- Toggles will be injected here -->
+                </div>
+            </div>
+
             <div class="settings-footer">
                 <button class="back-btn" id="settings-back-btn">BACK TO MENU</button>
             </div>
@@ -1566,7 +1575,7 @@
                 { id: 'buyBoomerang', name: 'Boomerang', description: 'Returns to you, hitting enemies twice', price: 120, type: 'weapon', weaponId: 'boomerang' }
             ],
             extras: [
-                { id: 'sideChick', name: 'Side Chick', description: 'A tiny pistol-wielding companion that fights at your side!', price: 200, type: 'companion' }
+                { id: 'sideChick', name: 'Side Chick', description: 'A tiny pistol-wielding companion that fights at your side!', price: 200, type: 'companion', permanent: true }
             ],
             statBuffs: [
                 { id: 'speedUp', name: 'Speed Boost', description: '+10% movement speed (permanent)', price: 300, type: 'statBuff', stat: 'speed', amount: 0.1 },
@@ -1598,6 +1607,25 @@
         let unlockedCharacters = ['duck', 'titanTurkey', 'kungPowChicken', 'mericaMallard', 'chick7', 'loonatic', 'eggySurprise'];
         const savedUnlocks = localStorage.getItem('duckDefenseUnlocks');
         if (savedUnlocks) unlockedCharacters = JSON.parse(savedUnlocks);
+        
+        // Permanent upgrades (Side Chick, etc)
+        let permanentUpgrades = {
+            sideChick: false
+        };
+        const savedPermUpgrades = localStorage.getItem('duckDefensePermUpgrades');
+        if (savedPermUpgrades) permanentUpgrades = JSON.parse(savedPermUpgrades);
+
+        // Upgrade settings (toggles)
+        let upgradeSettings = {
+            sideChick: true
+        };
+        const savedUpgradeSettings = localStorage.getItem('duckDefenseUpgradeSettings');
+        if (savedUpgradeSettings) upgradeSettings = JSON.parse(savedUpgradeSettings);
+
+        function savePermanentUpgrades() {
+            localStorage.setItem('duckDefensePermUpgrades', JSON.stringify(permanentUpgrades));
+            localStorage.setItem('duckDefenseUpgradeSettings', JSON.stringify(upgradeSettings));
+        }
         
         // Weapons unlocked this game session (pistol is always available)
         let sessionWeapons = ['pistol'];
@@ -6332,8 +6360,13 @@
                     break;
                     
                 case 'companion':
-                    if (item.id === 'sideChick' && !sideChick) {
-                        spawnSideChick();
+                    if (item.id === 'sideChick') {
+                        if (item.permanent) {
+                            permanentUpgrades.sideChick = true;
+                            savePermanentUpgrades();
+                            updateUpgradeToggles();
+                        }
+                        if (!sideChick) spawnSideChick();
                     }
                     break;
                     
@@ -6348,16 +6381,27 @@
             updateUI();
         }
         
-        function updateStatsDisplay() {
-            const speedEl = document.getElementById('stat-speed');
-            const attackEl = document.getElementById('stat-attack');
-            const jumpEl = document.getElementById('stat-jump');
-            const luckEl = document.getElementById('stat-luck');
+        function updateUpgradeToggles() {
+            const container = document.getElementById('upgrade-toggles');
+            if (!container) return;
+            container.innerHTML = '';
             
-            if (speedEl) speedEl.textContent = Math.round(playerStats.speed * 100) + '%';
-            if (attackEl) attackEl.textContent = Math.round(playerStats.attackSpeed * 100) + '%';
-            if (jumpEl) jumpEl.textContent = Math.round(playerStats.jumpHeight * 100) + '%';
-            if (luckEl) luckEl.textContent = Math.round(playerStats.luck * 100) + '%';
+            if (permanentUpgrades.sideChick) {
+                const btn = document.createElement('button');
+                btn.className = 'menu-btn secondary';
+                btn.style.padding = '10px 20px';
+                btn.style.fontSize = '14px';
+                btn.style.background = upgradeSettings.sideChick ? 'rgba(76, 175, 80, 0.4)' : 'rgba(255, 255, 255, 0.05)';
+                btn.textContent = 'Side Chick: ' + (upgradeSettings.sideChick ? 'ON' : 'OFF');
+                btn.onclick = () => {
+                    upgradeSettings.sideChick = !upgradeSettings.sideChick;
+                    savePermanentUpgrades();
+                    updateUpgradeToggles();
+                };
+                container.appendChild(btn);
+            } else {
+                container.innerHTML = '<span style="color: #666; font-size: 14px;">No permanent upgrades owned yet. Visit the shop!</span>';
+            }
         }
         
         function handlePlayerDamage(damage) {
@@ -6724,6 +6768,7 @@
         // ==================== MENU NAVIGATION ====================
         function showMenu() {
             gameState.playing = false;
+            updateUpgradeToggles();
             document.getElementById('main-menu').style.display = 'flex';
             document.getElementById('settings-page').style.display = 'none';
             document.getElementById('stats-page').style.display = 'none';
@@ -6763,6 +6808,11 @@
                 document.getElementById('mobile-controls').style.display = 'flex';
             } else {
                 document.getElementById('mobile-controls').style.display = 'none';
+            }
+            
+            // Start with permanent upgrades if enabled
+            if (permanentUpgrades.sideChick && upgradeSettings.sideChick) {
+                spawnSideChick();
             }
             
             gameState.isPaused = false;
