@@ -5220,81 +5220,67 @@
             const now = Date.now();
             
             if (player.abilityActive && charType === 'kungPowChicken') {
+                const now = Date.now();
                 if (now - (player.lastMartialArtTime || 0) > 400) {
                     player.lastMartialArtTime = now;
                     player.martialArtCycle = ((player.martialArtCycle || 0) + 1) % 2;
                     
                     const attackDir = new THREE.Vector3(-Math.sin(player.lookAngle), 0, -Math.cos(player.lookAngle));
                     
-                    // Martial Arts Animations
+                    // Martial Arts Animations - FORCE ROTATIONS AND VISUALS
                     if (player.martialArtCycle === 0) {
-                        // Spinning Kick
-                        player.velocity.y = 0.15;
-                        const spinInterval = setInterval(() => {
-                            if (player && player.mesh) player.mesh.rotation.y += 0.8;
-                        }, 50);
-                        setTimeout(() => clearInterval(spinInterval), 300);
+                        // SPINNING KICK
+                        player.velocity.y = 0.2; // Hop up
                         
-                        // Kick effect - Large cyan ring
-                        const kickGeom = new THREE.TorusGeometry(2, 0.1, 8, 32);
-                        const kickMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.8 });
-                        const kickRing = new THREE.Mesh(kickGeom, kickMat);
-                        kickRing.position.copy(player.position);
-                        kickRing.position.y += 0.5;
+                        // Create a clear energy visual
+                        const kickRing = new THREE.Mesh(
+                            new THREE.TorusGeometry(2.5, 0.2, 8, 32),
+                            new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.8 })
+                        );
+                        kickRing.position.copy(player.position).y += 0.5;
                         kickRing.rotation.x = Math.PI/2;
                         scene.add(kickRing);
-                        bloodParticles.push({ mesh: kickRing, velocity: new THREE.Vector3(0, 0, 0), lifetime: 10 });
+                        bloodParticles.push({ mesh: kickRing, velocity: new THREE.Vector3(0,0,0), lifetime: 15 });
 
-                        for (let i = 0; i < 12; i++) {
-                            const angle = (i / 12) * Math.PI * 2;
-                            const p = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.2), new THREE.MeshBasicMaterial({ color: 0x00FFFF, emissive: 0x00FFFF }));
-                            p.position.copy(player.position).addScaledVector(attackDir, 1.5);
-                            p.position.y += 0.5;
-                            scene.add(p);
-                            bloodParticles.push({ mesh: p, velocity: new THREE.Vector3(Math.cos(angle)*0.3, 0.15, Math.sin(angle)*0.3), lifetime: 20 });
-                        }
+                        // Force mesh to spin
+                        let spinCount = 0;
+                        const spinInt = setInterval(() => {
+                            if (player.mesh) player.mesh.rotation.y += 1.0;
+                            spinCount++;
+                            if (spinCount >= 6) clearInterval(spinInt);
+                        }, 50);
                     } else {
-                        // Wing Chops
+                        // WING CHOPS
                         const leftWing = player.mesh.getObjectByName('wingL');
                         const rightWing = player.mesh.getObjectByName('wingR');
+                        
                         if (leftWing && rightWing) {
-                            leftWing.rotation.z = Math.PI/2;
-                            rightWing.rotation.z = -Math.PI/2;
+                            leftWing.rotation.z = Math.PI/1.5;
+                            rightWing.rotation.z = -Math.PI/1.5;
                             setTimeout(() => {
                                 if (leftWing) leftWing.rotation.z = 0;
                                 if (rightWing) rightWing.rotation.z = 0;
                             }, 200);
                         }
                         
-                        // Chop effect - Make it bright and visible
-                        const chopGeom = new THREE.BoxGeometry(3, 0.3, 0.5);
-                        const chopMat = new THREE.MeshBasicMaterial({ 
-                            color: 0xFFFFFF, 
-                            transparent: true, 
-                            opacity: 1.0,
-                            side: THREE.DoubleSide
-                        });
-                        const chop = new THREE.Mesh(chopGeom, chopMat);
-                        chop.position.copy(player.position).addScaledVector(attackDir, 2.5);
-                        chop.position.y += 1.2;
-                        chop.lookAt(player.position.clone().add(attackDir));
-                        scene.add(chop);
-                        
-                        // Ensure it's added to a list that updates or fades
-                        bloodParticles.push({ mesh: chop, velocity: attackDir.clone().multiplyScalar(0.2), lifetime: 20 });
+                        // Large white slash
+                        const slash = new THREE.Mesh(
+                            new THREE.BoxGeometry(4, 0.5, 0.2),
+                            new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 })
+                        );
+                        slash.position.copy(player.position).addScaledVector(attackDir, 2);
+                        slash.position.y += 1.2;
+                        slash.lookAt(player.position.clone().add(attackDir));
+                        scene.add(slash);
+                        bloodParticles.push({ mesh: slash, velocity: attackDir.clone().multiplyScalar(0.2), lifetime: 20 });
                     }
                     
-                    // Damage nearby enemies
+                    // DAMAGE LOGIC - Ensure it's active
                     enemies.forEach((enemy, i) => {
                         const dist = player.position.distanceTo(enemy.position);
-                        if (dist < 7) {
-                            enemy.health -= 50;
-                            
-                            // Stronger hit visual
-                            for(let j=0; j<3; j++) {
-                                createBloodParticle(enemy.position.clone(), 'medium');
-                            }
-                            
+                        if (dist < 8) {
+                            enemy.health -= 60;
+                            createBloodParticle(enemy.position.clone(), 'large');
                             if (enemy.health <= 0) handleEnemyDeath(enemy, i, 'martialArts');
                         }
                     });
