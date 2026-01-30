@@ -39,7 +39,7 @@ I prefer iterative development, with clear communication before major changes.
 - **Vehicles**: Pilotable Hunter Trucks and Tanks, hijackable after defeating drivers. Tanks fire explosive shells.
 - **Grenades**: Throwable grenades with AOE damage and a 3-second cooldown.
 - **Playable Characters**:
-    - **Default**: Duck (classic), Titan Turkey (charge, stomp), Kung Pow Chicken (combo, invisibility), Merica Mallard (AOE, bombs), Chick 7 (tornado), Loonatic (berserker rage), Eggy Surprise (rolling egg, explosion on death).
+    - **Default**: Duck (classic), Turkey Trotter (charge, stomp), Kung Pow Chicken (combo, invisibility), Merica Mallard (AOE, bombs), Chick 7 (tornado), Loonatic (berserker rage), Eggy Surprise (rolling egg, explosion on death).
     - **Premium (Unlockable)**: Golden Duck (2x coins), Phoenix Fowl (explosion immunity, fire aura), Robot Rooster (faster attack, laser eyes), Poultrygeist (haunt, doppelganger), Duck Norris (roundhouse kick, chuck flurry), Quackula (lifesteal, bat swarm).
     - Each character has unique visual designs, primary (Q key) and special (orb-powered) abilities.
 - **Enemy Types**: Basic Hunter, Catapult Hunter (explosive projectiles), Hulk Hunter (melee-only, multiple lives). Progressive difficulty with Easy/Normal/Hard modes.

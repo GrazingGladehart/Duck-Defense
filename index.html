@@ -1087,7 +1087,7 @@
                 </div>
                 <div class="character-btns">
                     <button class="char-btn active" data-char="duck">Duck</button>
-                    <button class="char-btn" data-char="titanTurkey">Titan Turkey</button>
+                    <button class="char-btn" data-char="titanTurkey">Turkey Trotter</button>
                     <button class="char-btn" data-char="kungPowChicken">Kung Pow Chicken</button>
                     <button class="char-btn" data-char="mericaMallard">Merica Mallard</button>
                     <button class="char-btn" data-char="chick7">Chick 7</button>
@@ -1174,7 +1174,7 @@
                 maxJumps: 2
             },
             titanTurkey: {
-                name: 'Titan Turkey',
+                name: 'Turkey Trotter',
                 description: 'Helmet Charge (Q) + Turkey Stomp special! Heavy - 1 jump only.',
                 colors: { body: 0x8B4513, head: 0xCC3333, beak: 0xFFAA00, wing: 0x6B3513 },
                 ability: 'helmetCharge',
@@ -4653,7 +4653,7 @@
             const jumpForce = 1.25; // Increased jump force
             const gravity = -0.04;
             
-            // Titan Turkey speed boost when ability active
+            // Turkey Trotter speed boost when ability active
             if (gameSettings.character === 'titanTurkey' && player.abilityActive) {
                 baseSpeed = 0.08; // Double speed during charge!
             }
@@ -5350,7 +5350,7 @@
 
             const now = Date.now();
             
-            // Titan Turkey ram damage check
+            // Turkey Trotter ram damage check
             if (gameSettings.character === 'titanTurkey' && player.abilityActive) {
                 const ramRadius = 1.5;
                 for (let i = enemies.length - 1; i >= 0; i--) {
