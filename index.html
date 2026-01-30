@@ -1432,13 +1432,13 @@
             },
             frickinChickin: {
                 name: 'Frickin Chickin',
-                description: 'Egg Bomber (Q) + Egg Encasement special! Aerial menace - 3 jumps!',
+                description: 'Egg Bomber (Q) drops explosive eggs from butt while airborne! Special: turns into giant egg!',
                 colors: { body: 0xFF5500, head: 0xFF5500, beak: 0xFFCC00, wing: 0xFF8800 },
                 ability: 'eggBomber',
                 abilityCooldown: 3000,
                 abilityDuration: 0,
-                special: 'eggEncasement',
-                specialName: 'Egg Encasement',
+                special: 'giantEggTransform',
+                specialName: 'Giant Egg',
                 orbColor: 0xFFFFFF,
                 maxJumps: 3
             }
@@ -4077,6 +4077,9 @@
                 case 'eggEncasement':
                     executeEggEncasement();
                     break;
+                case 'giantEggTransform':
+                    executeGiantEggTransform();
+                    break;
                 case 'batSwarm':
                     executeBatSwarm();
                     break;
@@ -4084,7 +4087,9 @@
         }
         
         function executeEggBomber() {
-            // Drop an exploding egg beneath the bird
+            // Drop an exploding egg beneath the bird - only while airborne
+            if (player.position.y <= getTerrainHeight(player.position.x, player.position.z) + 0.5) return;
+
             const eggGeom = new THREE.SphereGeometry(0.3, 8, 8);
             const eggMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
             const egg = new THREE.Mesh(eggGeom, eggMat);
@@ -4119,6 +4124,62 @@
                     lifetime: 15
                 });
             }
+        }
+
+        function executeGiantEggTransform() {
+            // Similar to eggy surprise but as a special ability
+            player.specialActive = true;
+            player.isInvulnerable = true;
+            player.specialEndTime = Date.now() + 10000; // Lasts 10 seconds
+            
+            // Visual transformation
+            player.mesh.visible = false;
+            
+            const eggGeom = new THREE.SphereGeometry(1.5, 16, 16);
+            eggGeom.scale(0.8, 1, 0.8);
+            const eggMat = new THREE.MeshLambertMaterial({ color: 0xFFFACD });
+            const eggMesh = new THREE.Mesh(eggGeom, eggMat);
+            eggMesh.position.copy(player.position);
+            scene.add(eggMesh);
+            
+            const transformInterval = setInterval(() => {
+                eggMesh.position.copy(player.position);
+                eggMesh.rotation.x += 0.1;
+                eggMesh.rotation.z += 0.05;
+                
+                // Damage enemies we roll over
+                enemies.forEach((enemy, idx) => {
+                    if (eggMesh.position.distanceTo(enemy.position) < 2.5) {
+                        enemy.health -= 50;
+                        if (enemy.health <= 0) {
+                            handleEnemyDeath(enemy, idx, 'giantEgg');
+                        }
+                    }
+                });
+                
+                if (Date.now() >= player.specialEndTime || gameState.isGameOver) {
+                    clearInterval(transformInterval);
+                    scene.remove(eggMesh);
+                    player.mesh.visible = true;
+                    player.specialActive = false;
+                    player.isInvulnerable = false;
+                    
+                    // Transformation back effect
+                    for (let i = 0; i < 15; i++) {
+                        const puff = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.2),
+                            new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 })
+                        );
+                        puff.position.copy(player.position);
+                        scene.add(puff);
+                        bloodParticles.push({
+                            mesh: puff,
+                            velocity: new THREE.Vector3((Math.random()-0.5)*0.4, 0.3, (Math.random()-0.5)*0.4),
+                            lifetime: 20
+                        });
+                    }
+                }
+            }, 16);
         }
         
         function executeEggEncasement() {
