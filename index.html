@@ -3652,8 +3652,8 @@
             
             // Drop chance based on luck stat (25% base * luck multiplier)
             if (Math.random() < 0.25 * playerStats.luck) {
-                // Drop from all possible weapons (excluding current) or a curated list
-                const possibleDrops = Object.keys(weapons).filter(w => w !== 'pistol');
+                // Drop only from weapons already unlocked/bought in the shop
+                const possibleDrops = allTimeStats.unlockedWeapons.filter(w => w !== 'pistol' && w !== gameState.currentWeapon);
                 if (possibleDrops.length > 0) {
                     const droppedWeapon = possibleDrops[Math.floor(Math.random() * possibleDrops.length)];
                     createPickup(droppedWeapon, enemy.position.clone());
