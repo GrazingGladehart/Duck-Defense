@@ -4990,6 +4990,11 @@
                 if (mouseDown && now - player.lastAttackTime > effectiveCooldown) {
                     player.lastAttackTime = now;
                     
+                    // Kung Pow Chicken always performs karate on click
+                    if (gameSettings.character === 'kungPowChicken') {
+                        performKarateAttack();
+                    }
+
                     if (weapon.type === 'melee') {
                         meleeAttack();
                     } else {
@@ -4997,6 +5002,63 @@
                     }
                 }
             }
+        }
+
+        function performKarateAttack() {
+            const now = Date.now();
+            player.martialArtCycle = ((player.martialArtCycle || 0) + 1) % 2;
+            const attackDir = new THREE.Vector3(-Math.sin(player.lookAngle), 0, -Math.cos(player.lookAngle));
+            
+            if (player.martialArtCycle === 0) {
+                // SPINNING KICK
+                player.velocity.y = 0.25;
+                const kickRing = new THREE.Mesh(
+                    new THREE.TorusGeometry(3.0, 0.3, 10, 32),
+                    new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.9 })
+                );
+                kickRing.position.copy(player.position).y += 0.5;
+                kickRing.rotation.x = Math.PI/2;
+                scene.add(kickRing);
+                bloodParticles.push({ mesh: kickRing, velocity: new THREE.Vector3(0,0,0), lifetime: 20 });
+
+                let spinCount = 0;
+                const spinInt = setInterval(() => {
+                    if (player.mesh) player.mesh.rotation.y += 1.25;
+                    spinCount++;
+                    if (spinCount >= 8) clearInterval(spinInt);
+                }, 40);
+            } else {
+                // WING CHOPS
+                const leftWing = player.mesh.getObjectByName('wingL');
+                const rightWing = player.mesh.getObjectByName('wingR');
+                if (leftWing && rightWing) {
+                    leftWing.rotation.z = Math.PI/1.2;
+                    rightWing.rotation.z = -Math.PI/1.2;
+                    setTimeout(() => {
+                        if (leftWing) leftWing.rotation.z = 0;
+                        if (rightWing) rightWing.rotation.z = 0;
+                    }, 150);
+                }
+                const slash = new THREE.Mesh(
+                    new THREE.BoxGeometry(5, 0.8, 0.3),
+                    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 1.0 })
+                );
+                slash.position.copy(player.position).addScaledVector(attackDir, 3);
+                slash.position.y += 1.3;
+                slash.lookAt(player.position.clone().add(attackDir));
+                scene.add(slash);
+                bloodParticles.push({ mesh: slash, velocity: attackDir.clone().multiplyScalar(0.3), lifetime: 25 });
+            }
+
+            // Damage logic
+            enemies.forEach((enemy, i) => {
+                const dist = player.position.distanceTo(enemy.position);
+                if (dist < 10) {
+                    enemy.health -= 75;
+                    createBloodParticle(enemy.position.clone(), 'large');
+                    if (enemy.health <= 0) handleEnemyDeath(enemy, i, 'martialArts');
+                }
+            });
         }
 
         // ==================== ABILITY SYSTEM ====================
@@ -5223,69 +5285,7 @@
                 const now = Date.now();
                 if (now - (player.lastMartialArtTime || 0) > 400) {
                     player.lastMartialArtTime = now;
-                    player.martialArtCycle = ((player.martialArtCycle || 0) + 1) % 2;
-                    
-                    const attackDir = new THREE.Vector3(-Math.sin(player.lookAngle), 0, -Math.cos(player.lookAngle));
-                    
-                    // Martial Arts Animations - FORCE ROTATIONS AND VISUALS
-                    if (player.martialArtCycle === 0) {
-                        // SPINNING KICK
-                        player.velocity.y = 0.25; // Hop up
-                        
-                        // Create a clear energy visual
-                        const kickRing = new THREE.Mesh(
-                            new THREE.TorusGeometry(3.0, 0.3, 10, 32),
-                            new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.9 })
-                        );
-                        kickRing.position.copy(player.position).y += 0.5;
-                        kickRing.rotation.x = Math.PI/2;
-                        scene.add(kickRing);
-                        bloodParticles.push({ mesh: kickRing, velocity: new THREE.Vector3(0,0,0), lifetime: 20 });
-
-                        // Force mesh to spin - ensure it's the actual character mesh
-                        let spinCount = 0;
-                        const spinInt = setInterval(() => {
-                            if (player.mesh) {
-                                player.mesh.rotation.y += 1.25; // Faster spin
-                            }
-                            spinCount++;
-                            if (spinCount >= 8) clearInterval(spinInt);
-                        }, 40);
-                    } else {
-                        // WING CHOPS
-                        const leftWing = player.mesh.getObjectByName('wingL');
-                        const rightWing = player.mesh.getObjectByName('wingR');
-                        
-                        if (leftWing && rightWing) {
-                            leftWing.rotation.z = Math.PI/1.2;
-                            rightWing.rotation.z = -Math.PI/1.2;
-                            setTimeout(() => {
-                                if (leftWing) leftWing.rotation.z = 0;
-                                if (rightWing) rightWing.rotation.z = 0;
-                            }, 150);
-                        }
-                        
-                        // Large white slash
-                        const slash = new THREE.Mesh(
-                            new THREE.BoxGeometry(5, 0.8, 0.3),
-                            new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 1.0 })
-                        );
-                        slash.position.copy(player.position).addScaledVector(attackDir, 3);
-                        slash.position.y += 1.3;
-                        slash.lookAt(player.position.clone().add(attackDir));
-                        scene.add(slash);
-                        bloodParticles.push({ mesh: slash, velocity: attackDir.clone().multiplyScalar(0.3), lifetime: 25 });
-                    }
-                    
-                    // DAMAGE LOGIC - Ensure it's active
-                    enemies.forEach((enemy, i) => {
-                        const dist = player.position.distanceTo(enemy.position);
-                        if (dist < 10) { // Increased range
-                            enemy.health -= 75; // Increased damage
-                            createBloodParticle(enemy.position.clone(), 'large');
-                            if (enemy.health <= 0) handleEnemyDeath(enemy, i, 'martialArts');
-                        }
-                    });
+                    performKarateAttack();
                 }
             }
 
