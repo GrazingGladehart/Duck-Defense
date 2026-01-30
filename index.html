@@ -5654,9 +5654,23 @@
             
             if (weapon.type === 'returning') {
                 // Boomerang - comes back to player
-                const boomGeom = new THREE.TorusGeometry(0.2, 0.05, 4, 6);
-                const boomMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-                const boom = new THREE.Mesh(boomGeom, boomMat);
+                const boomGroup = new THREE.Group();
+                const legMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); // Wooden brown
+                
+                // Create two legs for the V shape
+                const leg1Geom = new THREE.BoxGeometry(0.1, 0.8, 0.04);
+                const leg1 = new THREE.Mesh(leg1Geom, legMat);
+                leg1.position.set(0.2, 0, 0);
+                leg1.rotation.z = -Math.PI / 4; 
+                boomGroup.add(leg1);
+                
+                const leg2Geom = new THREE.BoxGeometry(0.1, 0.8, 0.04);
+                const leg2 = new THREE.Mesh(leg2Geom, legMat);
+                leg2.position.set(-0.2, 0, 0);
+                leg2.rotation.z = Math.PI / 4;
+                boomGroup.add(leg2);
+                
+                const boom = boomGroup;
                 boom.position.copy(start);
                 scene.add(boom);
                 
