@@ -3752,17 +3752,18 @@
             mesh.add(trail);
             
             // Arc trajectory for catapult
-            const vel = direction.clone().multiplyScalar(0.4);
-            vel.y = 0.25; // Arc upward
+            const vel = direction.clone().multiplyScalar(fromPlayer ? 0.6 : 0.4);
+            vel.y = 0.35; // Arc upward
             
             projectiles.push({
                 mesh,
                 velocity: vel,
-                damage: fromPlayer ? 60 : 2,
+                damage: fromPlayer ? 60 : 25,
                 lifetime: 200,
                 fromPlayer: fromPlayer,
                 isExplosive: true,
-                explosionRadius: fromPlayer ? 5 : 4,
+                isArc: true,
+                explosionRadius: fromPlayer ? 6 : 4.5,
                 weaponType: 'catapult'
             });
         }
@@ -5783,32 +5784,32 @@
                     proj.velocity.y -= 0.015;
                 }
                 
-            // Boomerang behavior
-            if (proj.isBoomerang) {
-                proj.travelDistance += proj.velocity.length();
-                proj.mesh.rotation.y += 0.3; // Spin
-                
-                if (!proj.returning && proj.travelDistance > proj.maxDistance) {
-                    proj.returning = true;
-                }
-                
-                if (proj.returning) {
-                    // Return to player
-                    const toPlayer = player.position.clone().sub(proj.mesh.position).normalize();
-                    proj.velocity.lerp(toPlayer.multiplyScalar(0.8), 0.2); // Faster return
+                // Boomerang behavior
+                if (proj.isBoomerang) {
+                    proj.travelDistance += proj.velocity.length();
+                    proj.mesh.rotation.y += 0.3; // Spin
                     
-                    // Check if reached player
-                    if (proj.mesh.position.distanceTo(player.position) < 2) {
-                        proj.lifetime = 0;
+                    if (!proj.returning && proj.travelDistance > proj.maxDistance) {
+                        proj.returning = true;
+                    }
+                    
+                    if (proj.returning) {
+                        // Return to player
+                        const toPlayer = player.position.clone().sub(proj.mesh.position).normalize();
+                        proj.velocity.lerp(toPlayer.multiplyScalar(0.8), 0.2); // Faster return
+                        
+                        // Check if reached player
+                        if (proj.mesh.position.distanceTo(player.position) < 2) {
+                            proj.lifetime = 0;
+                        }
+                    }
+
+                    // Boomerang multi-hit: reset hitEnemies list every 0.5 seconds to allow hitting the same enemy on return
+                    if (!proj.lastHitReset || now - proj.lastHitReset > 500) {
+                        proj.hitEnemies = [];
+                        proj.lastHitReset = now;
                     }
                 }
-
-                // Boomerang multi-hit: reset hitEnemies list every 0.5 seconds to allow hitting the same enemy on return
-                if (!proj.lastHitReset || now - proj.lastHitReset > 500) {
-                    proj.hitEnemies = [];
-                    proj.lastHitReset = now;
-                }
-            }
                 
                 // Flame particles
                 if (proj.isFlame) {
@@ -5816,6 +5817,16 @@
                 }
                 
                 proj.mesh.position.add(proj.velocity);
+
+                // Terrain collision for explosive arc projectiles
+                if (proj.isExplosive && proj.isArc) {
+                    const terrainY = getTerrainHeight(proj.mesh.position.x, proj.mesh.position.z);
+                    if (proj.mesh.position.y <= terrainY + 0.5) {
+                        createExplosion(proj.mesh.position.clone(), proj.explosionRadius, proj.damage);
+                        proj.lifetime = 0;
+                    }
+                }
+
                 proj.lifetime--;
                 
                 // Keep on terrain for arc projectiles
