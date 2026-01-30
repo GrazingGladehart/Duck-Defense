@@ -180,7 +180,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 200px;
+            height: 250px;
             display: none;
             z-index: 10;
             pointer-events: none;
@@ -188,71 +188,89 @@
 
         #joystick-container {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 120px;
-            height: 120px;
-            background: rgba(255,255,255,0.15);
+            bottom: 40px;
+            left: 40px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255,255,255,0.1);
             border-radius: 50%;
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.2);
             pointer-events: auto;
             touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #joystick-thumb {
             position: absolute;
-            width: 50px;
-            height: 50px;
-            background: rgba(255,255,255,0.5);
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.3);
             border-radius: 50%;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
             pointer-events: none;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
         }
 
         .mobile-action-btns {
             position: absolute;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            bottom: 40px;
+            right: 40px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
             pointer-events: auto;
         }
 
         .mobile-btn {
-            width: 70px;
-            height: 70px;
-            background: rgba(255,255,255,0.25);
+            width: 85px;
+            height: 85px;
+            background: rgba(0,0,0,0.5);
             border-radius: 50%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             color: white;
             user-select: none;
-            border: 2px solid rgba(255,255,255,0.4);
+            border: 2px solid rgba(255,255,255,0.3);
             touch-action: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .mobile-btn .btn-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
         }
 
         .mobile-btn:active {
-            background: rgba(255,255,255,0.5);
-            transform: scale(0.95);
+            background: rgba(255,255,255,0.3);
+            transform: scale(0.92);
+            border-color: #fff;
         }
 
         #mobile-jump {
-            background: rgba(100, 200, 255, 0.3);
-            border-color: rgba(100, 200, 255, 0.5);
+            background: rgba(30, 144, 255, 0.4);
+            border-color: rgba(30, 144, 255, 0.6);
         }
 
         #mobile-attack {
-            background: rgba(255, 100, 100, 0.3);
-            border-color: rgba(255, 100, 100, 0.5);
-            width: 80px;
-            height: 80px;
-            font-size: 12px;
+            background: rgba(255, 69, 0, 0.4);
+            border-color: rgba(255, 69, 0, 0.6);
+            width: 100px;
+            height: 100px;
+        }
+        
+        #mobile-ability {
+            background: rgba(50, 205, 50, 0.4);
+            border-color: rgba(50, 205, 50, 0.6);
+        }
+
+        #mobile-special {
+            background: rgba(148, 0, 211, 0.4);
+            border-color: rgba(148, 0, 211, 0.6);
         }
 
         /* Main Menu Styles */
@@ -1025,8 +1043,22 @@
             <div id="joystick-thumb"></div>
         </div>
         <div class="mobile-action-btns">
-            <div class="mobile-btn" id="mobile-jump">JUMP</div>
-            <div class="mobile-btn" id="mobile-attack">ATTACK</div>
+            <div class="mobile-btn" id="mobile-ability">
+                <span class="btn-icon">⚡</span>
+                <span>ABILITY</span>
+            </div>
+            <div class="mobile-btn" id="mobile-jump">
+                <span class="btn-icon">↑</span>
+                <span>JUMP</span>
+            </div>
+            <div class="mobile-btn" id="mobile-special">
+                <span class="btn-icon">★</span>
+                <span>SPECIAL</span>
+            </div>
+            <div class="mobile-btn" id="mobile-attack">
+                <span class="btn-icon">⚔️</span>
+                <span>ATTACK</span>
+            </div>
         </div>
     </div>
 
@@ -6607,6 +6639,20 @@
                 } else {
                     shootProjectile();
                 }
+            }
+        });
+        
+        document.getElementById('mobile-ability').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameState.isPaused && !gameState.isGameOver) {
+                activateAbility();
+            }
+        });
+
+        document.getElementById('mobile-special').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameState.isPaused && !gameState.isGameOver) {
+                activateSpecial();
             }
         });
 
