@@ -5226,18 +5226,27 @@
                         // Spinning Kick
                         player.velocity.y = 0.15;
                         const spinInterval = setInterval(() => {
-                            player.mesh.rotation.y += 0.8;
+                            if (player && player.mesh) player.mesh.rotation.y += 0.8;
                         }, 50);
                         setTimeout(() => clearInterval(spinInterval), 300);
                         
-                        // Kick effect
+                        // Kick effect - Large cyan ring
+                        const kickGeom = new THREE.TorusGeometry(2, 0.1, 8, 32);
+                        const kickMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.8 });
+                        const kickRing = new THREE.Mesh(kickGeom, kickMat);
+                        kickRing.position.copy(player.position);
+                        kickRing.position.y += 0.5;
+                        kickRing.rotation.x = Math.PI/2;
+                        scene.add(kickRing);
+                        bloodParticles.push({ mesh: kickRing, velocity: new THREE.Vector3(0, 0, 0), lifetime: 10 });
+
                         for (let i = 0; i < 12; i++) {
                             const angle = (i / 12) * Math.PI * 2;
-                            const p = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.1), new THREE.MeshBasicMaterial({ color: 0x00FFFF }));
+                            const p = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.2), new THREE.MeshBasicMaterial({ color: 0x00FFFF, emissive: 0x00FFFF }));
                             p.position.copy(player.position).addScaledVector(attackDir, 1.5);
                             p.position.y += 0.5;
                             scene.add(p);
-                            bloodParticles.push({ mesh: p, velocity: new THREE.Vector3(Math.cos(angle)*0.2, 0.1, Math.sin(angle)*0.2), lifetime: 15 });
+                            bloodParticles.push({ mesh: p, velocity: new THREE.Vector3(Math.cos(angle)*0.3, 0.15, Math.sin(angle)*0.3), lifetime: 20 });
                         }
                     } else {
                         // Wing Chops
@@ -5247,28 +5256,41 @@
                             leftWing.rotation.z = Math.PI/2;
                             rightWing.rotation.z = -Math.PI/2;
                             setTimeout(() => {
-                                leftWing.rotation.z = 0;
-                                rightWing.rotation.z = 0;
+                                if (leftWing) leftWing.rotation.z = 0;
+                                if (rightWing) rightWing.rotation.z = 0;
                             }, 200);
                         }
                         
-                        // Chop effect
-                        const chop = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.5), new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }));
-                        chop.position.copy(player.position).addScaledVector(attackDir, 2);
-                        chop.position.y += 1;
+                        // Chop effect - Make it bright and visible
+                        const chopGeom = new THREE.BoxGeometry(3, 0.3, 0.5);
+                        const chopMat = new THREE.MeshBasicMaterial({ 
+                            color: 0xFFFFFF, 
+                            transparent: true, 
+                            opacity: 1.0,
+                            side: THREE.DoubleSide
+                        });
+                        const chop = new THREE.Mesh(chopGeom, chopMat);
+                        chop.position.copy(player.position).addScaledVector(attackDir, 2.5);
+                        chop.position.y += 1.2;
                         chop.lookAt(player.position.clone().add(attackDir));
                         scene.add(chop);
-                        bloodParticles.push({ mesh: chop, velocity: attackDir.clone().multiplyScalar(0.1), lifetime: 10 });
+                        
+                        // Ensure it's added to a list that updates or fades
+                        bloodParticles.push({ mesh: chop, velocity: attackDir.clone().multiplyScalar(0.2), lifetime: 20 });
                     }
                     
                     // Damage nearby enemies
                     enemies.forEach((enemy, i) => {
-                        if (player.position.distanceTo(enemy.position) < 6) {
-                            enemy.health -= 40;
-                            if (enemy.health <= 0) handleEnemyDeath(enemy, i, 'martialArts');
+                        const dist = player.position.distanceTo(enemy.position);
+                        if (dist < 7) {
+                            enemy.health -= 50;
                             
-                            // Visual hit
-                            createBloodParticle(enemy.position.clone(), 'small');
+                            // Stronger hit visual
+                            for(let j=0; j<3; j++) {
+                                createBloodParticle(enemy.position.clone(), 'medium');
+                            }
+                            
+                            if (enemy.health <= 0) handleEnemyDeath(enemy, i, 'martialArts');
                         }
                     });
                 }
