@@ -5230,56 +5230,58 @@
                     // Martial Arts Animations - FORCE ROTATIONS AND VISUALS
                     if (player.martialArtCycle === 0) {
                         // SPINNING KICK
-                        player.velocity.y = 0.2; // Hop up
+                        player.velocity.y = 0.25; // Hop up
                         
                         // Create a clear energy visual
                         const kickRing = new THREE.Mesh(
-                            new THREE.TorusGeometry(2.5, 0.2, 8, 32),
-                            new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.8 })
+                            new THREE.TorusGeometry(3.0, 0.3, 10, 32),
+                            new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.9 })
                         );
                         kickRing.position.copy(player.position).y += 0.5;
                         kickRing.rotation.x = Math.PI/2;
                         scene.add(kickRing);
-                        bloodParticles.push({ mesh: kickRing, velocity: new THREE.Vector3(0,0,0), lifetime: 15 });
+                        bloodParticles.push({ mesh: kickRing, velocity: new THREE.Vector3(0,0,0), lifetime: 20 });
 
-                        // Force mesh to spin
+                        // Force mesh to spin - ensure it's the actual character mesh
                         let spinCount = 0;
                         const spinInt = setInterval(() => {
-                            if (player.mesh) player.mesh.rotation.y += 1.0;
+                            if (player.mesh) {
+                                player.mesh.rotation.y += 1.25; // Faster spin
+                            }
                             spinCount++;
-                            if (spinCount >= 6) clearInterval(spinInt);
-                        }, 50);
+                            if (spinCount >= 8) clearInterval(spinInt);
+                        }, 40);
                     } else {
                         // WING CHOPS
                         const leftWing = player.mesh.getObjectByName('wingL');
                         const rightWing = player.mesh.getObjectByName('wingR');
                         
                         if (leftWing && rightWing) {
-                            leftWing.rotation.z = Math.PI/1.5;
-                            rightWing.rotation.z = -Math.PI/1.5;
+                            leftWing.rotation.z = Math.PI/1.2;
+                            rightWing.rotation.z = -Math.PI/1.2;
                             setTimeout(() => {
                                 if (leftWing) leftWing.rotation.z = 0;
                                 if (rightWing) rightWing.rotation.z = 0;
-                            }, 200);
+                            }, 150);
                         }
                         
                         // Large white slash
                         const slash = new THREE.Mesh(
-                            new THREE.BoxGeometry(4, 0.5, 0.2),
-                            new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 })
+                            new THREE.BoxGeometry(5, 0.8, 0.3),
+                            new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 1.0 })
                         );
-                        slash.position.copy(player.position).addScaledVector(attackDir, 2);
-                        slash.position.y += 1.2;
+                        slash.position.copy(player.position).addScaledVector(attackDir, 3);
+                        slash.position.y += 1.3;
                         slash.lookAt(player.position.clone().add(attackDir));
                         scene.add(slash);
-                        bloodParticles.push({ mesh: slash, velocity: attackDir.clone().multiplyScalar(0.2), lifetime: 20 });
+                        bloodParticles.push({ mesh: slash, velocity: attackDir.clone().multiplyScalar(0.3), lifetime: 25 });
                     }
                     
                     // DAMAGE LOGIC - Ensure it's active
                     enemies.forEach((enemy, i) => {
                         const dist = player.position.distanceTo(enemy.position);
-                        if (dist < 8) {
-                            enemy.health -= 60;
+                        if (dist < 10) { // Increased range
+                            enemy.health -= 75; // Increased damage
                             createBloodParticle(enemy.position.clone(), 'large');
                             if (enemy.health <= 0) handleEnemyDeath(enemy, i, 'martialArts');
                         }
