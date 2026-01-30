@@ -5157,35 +5157,44 @@
         }
 
         function performMartialArtsCombo(attackDir) {
-            const comboMoves = ['Jab!', 'Cross!', 'Kick!', 'Uppercut!', 'DRAGON STRIKE!'];
-            const moveIndex = Math.min(player.comboCount - 1, comboMoves.length - 1);
-            const damage = 30 + (player.comboCount * 15); // Increasing damage with combo
-            const range = 2.5 + (player.comboCount * 0.3); // Increasing range
+            const damage = 30 + (player.comboCount * 15);
+            const range = 5.0;
             
-            // Create combo effect particles
-            for (let i = 0; i < 5; i++) {
-                const particle = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.15),
-                    new THREE.MeshBasicMaterial({ color: player.comboCount >= 5 ? 0xFF0000 : 0xFFFF00 })
-                );
-                particle.position.copy(player.position);
-                particle.position.add(attackDir.clone().multiplyScalar(1 + i * 0.3));
-                particle.position.y += 0.5;
-                scene.add(particle);
-                
-                const vel = attackDir.clone().multiplyScalar(0.3);
-                vel.y = Math.random() * 0.2;
-                bloodParticles.push({ mesh: particle, velocity: vel, lifetime: 15 });
-            }
+            // Create "chi" impact effects
+            const chiGeom = new THREE.RingGeometry(0.1, 1.5, 16);
+            const chiMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+            const chi = new THREE.Mesh(chiGeom, chiMat);
+            chi.position.copy(player.position);
+            chi.position.y += 1;
+            chi.lookAt(player.position.clone().add(attackDir));
+            scene.add(chi);
             
+            // Chi ring expands and fades
+            bloodParticles.push({
+                mesh: chi,
+                velocity: new THREE.Vector3(0, 0, 0),
+                lifetime: 10,
+                update: function() {
+                    this.mesh.scale.multiplyScalar(1.2);
+                    this.mesh.material.opacity *= 0.8;
+                }
+            });
+
             // Hit enemies in range with combo damage
-            const attackPos = player.position.clone().add(attackDir.clone().multiplyScalar(range / 2));
             enemies.forEach((enemy, idx) => {
-                const dist = attackPos.distanceTo(enemy.position);
+                const dist = player.position.distanceTo(enemy.position);
                 if (dist < range) {
-                    enemy.health -= damage;
-                    if (enemy.health <= 0) {
-                        handleEnemyDeath(enemy, idx, 'martialArts');
+                    const toEnemy = enemy.position.clone().sub(player.position).normalize();
+                    if (attackDir.dot(toEnemy) > 0.3) {
+                        enemy.health -= damage;
+                        
+                        // Push back
+                        enemy.position.add(toEnemy.multiplyScalar(0.4));
+                        enemy.mesh.position.copy(enemy.position);
+                        
+                        if (enemy.health <= 0) {
+                            handleEnemyDeath(enemy, idx, 'martialArts');
+                        }
                     }
                 }
             });
@@ -5204,7 +5213,6 @@
             if (charType === 'kungPowChicken' && player.abilityActive) {
                 player.comboCount++;
                 performMartialArtsCombo(attackDir);
-                return;
             }
             
             // Weapon swing animation
