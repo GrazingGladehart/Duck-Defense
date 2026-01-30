@@ -1196,6 +1196,7 @@
                     <button class="char-btn locked" data-char="poultrygeist">Poultrygeist</button>
                     <button class="char-btn locked" data-char="duckNorris">Duck Norris</button>
                     <button class="char-btn locked" data-char="quackula">Quackula</button>
+                    <button class="char-btn locked" data-char="frickinChickin">Frickin Chickin</button>
                 </div>
                 <div class="char-description" id="char-description">Classic yellow duck - balanced gameplay</div>
             </div>
@@ -1425,6 +1426,18 @@
                 orbColor: 0x8B0000,
                 maxJumps: 3,
                 lifesteal: 0.15
+            },
+            frickinChickin: {
+                name: 'Frickin Chickin',
+                description: 'Egg Bomber (Q) + Egg Encasement special! Aerial menace - 3 jumps!',
+                colors: { body: 0xFF5500, head: 0xFF5500, beak: 0xFFCC00, wing: 0xFF8800 },
+                ability: 'eggBomber',
+                abilityCooldown: 3000,
+                abilityDuration: 0,
+                special: 'eggEncasement',
+                specialName: 'Egg Encasement',
+                orbColor: 0xFFFFFF,
+                maxJumps: 3
             }
         };
         
@@ -1558,6 +1571,7 @@
             birds: [
                 { id: 'goldenDuck', name: 'Golden Duck', description: 'Shiny golden duck - earn 2x coins!', price: 500, type: 'character', unlockId: 'goldenDuck' },
                 { id: 'phoenixFowl', name: 'Phoenix Fowl', description: 'Fiery bird - immune to explosions!', price: 750, type: 'character', unlockId: 'phoenixFowl' },
+                { id: 'frickinChickin', name: 'Frickin Chickin', description: 'Aerial egg bomber - drop explosions from above!', price: 800, type: 'character', unlockId: 'frickinChickin' },
                 { id: 'robotRooster', name: 'Robot Rooster', description: 'Mechanical menace - faster attack speed!', price: 1000, type: 'character', unlockId: 'robotRooster' },
                 { id: 'poultrygeist', name: 'Poultrygeist', description: 'Spectral ghost bird - summon a clone!', price: 850, type: 'character', unlockId: 'poultrygeist' },
                 { id: 'duckNorris', name: 'Duck Norris', description: 'Martial arts master - roundhouse kicks!', price: 900, type: 'character', unlockId: 'duckNorris' },
@@ -4057,12 +4071,115 @@
                 case 'chuckFlurry':
                     executeChuckFlurry();
                     break;
+                case 'eggEncasement':
+                    executeEggEncasement();
+                    break;
                 case 'batSwarm':
                     executeBatSwarm();
                     break;
             }
         }
         
+        function executeEggBomber() {
+            // Drop an exploding egg beneath the bird
+            const eggGeom = new THREE.SphereGeometry(0.3, 8, 8);
+            const eggMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+            const egg = new THREE.Mesh(eggGeom, eggMat);
+            
+            const start = player.position.clone();
+            start.y -= 0.5;
+            egg.position.copy(start);
+            scene.add(egg);
+            
+            projectiles.push({
+                mesh: egg,
+                velocity: new THREE.Vector3(0, -0.2, 0),
+                damage: 50,
+                lifetime: 100,
+                fromPlayer: true,
+                isExplosive: true,
+                explosionRadius: 5,
+                weaponType: 'eggBomb'
+            });
+            
+            // Visual "drop" puff
+            for (let i = 0; i < 5; i++) {
+                const puff = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.15),
+                    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.5 })
+                );
+                puff.position.copy(start);
+                scene.add(puff);
+                bloodParticles.push({
+                    mesh: puff,
+                    velocity: new THREE.Vector3((Math.random()-0.5)*0.1, 0.1, (Math.random()-0.5)*0.1),
+                    lifetime: 15
+                });
+            }
+        }
+        
+        function executeEggEncasement() {
+            // Encase player in a giant egg shell, providing invulnerability and healing
+            player.specialActive = true;
+            player.isInvulnerable = true;
+            player.specialEndTime = Date.now() + 5000;
+            
+            // Create giant egg mesh around player
+            const shellGeom = new THREE.SphereGeometry(1.8, 16, 16);
+            shellGeom.scale(0.8, 1, 0.8);
+            const shellMat = new THREE.MeshLambertMaterial({ 
+                color: 0xFFFFFF, 
+                transparent: true, 
+                opacity: 0.7 
+            });
+            const shell = new THREE.Mesh(shellGeom, shellMat);
+            shell.position.copy(player.position);
+            scene.add(shell);
+            
+            // Healing over time
+            const healInterval = setInterval(() => {
+                if (gameState.lives < 3) {
+                    gameState.lives = Math.min(3, gameState.lives + 0.5);
+                    updateUI();
+                }
+                
+                // Pulsing effect
+                shell.scale.multiplyScalar(1.05);
+                setTimeout(() => shell.scale.multiplyScalar(0.952), 50);
+                
+                if (Date.now() >= player.specialEndTime || gameState.isGameOver) {
+                    clearInterval(healInterval);
+                    scene.remove(shell);
+                    player.specialActive = false;
+                    player.isInvulnerable = false;
+                    
+                    // Shell break effect
+                    for (let i = 0; i < 20; i++) {
+                        const frag = new THREE.Mesh(
+                            new THREE.BoxGeometry(0.2, 0.2, 0.05),
+                            new THREE.MeshLambertMaterial({ color: 0xFFFFFF })
+                        );
+                        frag.position.copy(player.position);
+                        scene.add(frag);
+                        bloodParticles.push({
+                            mesh: frag,
+                            velocity: new THREE.Vector3((Math.random()-0.5)*0.4, 0.2, (Math.random()-0.5)*0.4),
+                            lifetime: 30
+                        });
+                    }
+                }
+            }, 1000);
+            
+            // Update shell position to follow player
+            const updatePos = () => {
+                if (shell.parent) {
+                    shell.position.copy(player.position);
+                    requestAnimationFrame(updatePos);
+                }
+            };
+            updatePos();
+        }
+
         function executeChuckFlurry() {
             // Rapid flurry of roundhouse kicks in all directions
             player.specialActive = true;
@@ -5097,6 +5214,10 @@
             } else if (charType === 'duckNorris') {
                 // Roundhouse kick - instant devastating attack
                 executeRoundhouseKick();
+                player.abilityActive = false;
+            } else if (charType === 'frickinChickin') {
+                // Egg Bomber - drop egg straight down
+                executeEggBomber();
                 player.abilityActive = false;
             } else if (charType === 'quackula') {
                 // Blood Drain - lifesteal mode for duration
