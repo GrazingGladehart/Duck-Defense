@@ -1251,7 +1251,10 @@
     <div id="game-over">
         <h1>GAME OVER!</h1>
         <p>Final Score: <span id="final-score">0</span></p>
-        <button id="restart-btn">PLAY AGAIN</button>
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+            <button id="restart-btn">PLAY AGAIN</button>
+            <button id="shop-continue-btn" style="background: #FFD700; color: #333;">VISIT SHOP TO CONTINUE</button>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -6568,6 +6571,10 @@
                         gameState.isGameOver = false;
                         gameState.isPaused = false;
                         document.getElementById('game-over').style.display = 'none';
+                        
+                        // Resume game sounds or animations if needed
+                        // Since the game loop (animate) check is !gameState.isGameOver, it should resume automatically
+                        
                         // Record that we continued
                         if (!sessionStats.continues) sessionStats.continues = 0;
                         sessionStats.continues++;
@@ -7329,6 +7336,10 @@
         document.getElementById('restart-btn').addEventListener('click', () => {
             resetGame();
             startGame();
+        });
+
+        document.getElementById('shop-continue-btn').addEventListener('click', () => {
+            openShop();
         });
 
         document.getElementById('special-btn').addEventListener('click', () => {
