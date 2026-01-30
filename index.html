@@ -1655,7 +1655,7 @@
             catapult: { damage: 60, range: 40, cooldown: 1500, type: 'arc', speed: 0.3 },
             cannon: { damage: 100, range: 50, cooldown: 2000, type: 'projectile', speed: 0.5, aoe: 5 },
             flamethrower: { damage: 8, range: 12, cooldown: 50, type: 'stream', speed: 0.4, burnDamage: 5 },
-            lightning: { damage: 45, range: 20, cooldown: 800, type: 'chain', speed: 2.0, chainCount: 3 },
+            'lightning': { damage: 45, range: 30, cooldown: 1000, type: 'chain', speed: 0.6, chainCount: 4 },
             boomerang: { damage: 35, range: 25, cooldown: 1200, type: 'returning', speed: 0.5 }
         };
 
@@ -5630,8 +5630,8 @@
             }
             
             if (weapon.type === 'chain') {
-                // Tesla coil - lightning bolt that chains
-                const boltGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 4);
+                // Tesla coil - lightning bolt that chains and homes
+                const boltGeom = new THREE.CylinderGeometry(0.15, 0.15, 1.0, 4); // Thicker bolt
                 const boltMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF });
                 const bolt = new THREE.Mesh(boltGeom, boltMat);
                 bolt.position.copy(start);
@@ -5642,10 +5642,11 @@
                     mesh: bolt,
                     velocity: direction.clone().multiplyScalar(weapon.speed),
                     damage: weapon.damage,
-                    lifetime: 50,
+                    lifetime: 100, // Longer lifetime for homing
                     fromPlayer: true,
                     weaponType: gameState.currentWeapon,
                     isChain: true,
+                    isHoming: true, // Enable homing
                     chainCount: weapon.chainCount,
                     hitEnemies: []
                 });
@@ -6162,6 +6163,26 @@
                 // Flame particles
                 if (proj.isFlame) {
                     proj.mesh.scale.multiplyScalar(0.95); // Shrink over time
+                }
+                
+                // Homing behavior for Tesla bolts
+                if (proj.isHoming && proj.fromPlayer) {
+                    let nearestEnemy = null;
+                    let nearestDist = 20;
+                    enemies.forEach(e => {
+                        const d = proj.mesh.position.distanceTo(e.position);
+                        if (d < nearestDist) {
+                            nearestDist = d;
+                            nearestEnemy = e;
+                        }
+                    });
+                    
+                    if (nearestEnemy) {
+                        const toEnemy = nearestEnemy.position.clone().sub(proj.mesh.position).normalize();
+                        proj.velocity.lerp(toEnemy.multiplyScalar(0.6), 0.1);
+                        proj.mesh.lookAt(nearestEnemy.position);
+                        proj.mesh.rotation.x = Math.PI / 2;
+                    }
                 }
                 
                 proj.mesh.position.add(proj.velocity);
