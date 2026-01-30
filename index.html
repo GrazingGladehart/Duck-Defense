@@ -6562,6 +6562,17 @@
                     } else if (item.id === 'fullHeal') {
                         gameState.lives = 3;
                     }
+                    
+                    // If game was over, continue!
+                    if (gameState.isGameOver && gameState.lives > 0) {
+                        gameState.isGameOver = false;
+                        gameState.isPaused = false;
+                        document.getElementById('game-over').style.display = 'none';
+                        // Record that we continued
+                        if (!sessionStats.continues) sessionStats.continues = 0;
+                        sessionStats.continues++;
+                    }
+                    
                     updateUI();
                     break;
                     
