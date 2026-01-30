@@ -5017,6 +5017,8 @@
                 }
             } else if (charType === 'kungPowChicken') {
                 player.comboCount = 0;
+                player.lastMartialArtTime = 0;
+                player.martialArtCycle = 0;
             } else if (charType === 'mericaMallard') {
                 // Eagle strike - instant damage in area
                 executeEagleStrike();
@@ -5210,6 +5212,68 @@
         function updateAbilityState(delta) {
             const charType = gameSettings.character;
             const config = characterConfig[charType];
+            const now = Date.now();
+            
+            if (player.abilityActive && charType === 'kungPowChicken') {
+                if (now - (player.lastMartialArtTime || 0) > 400) {
+                    player.lastMartialArtTime = now;
+                    player.martialArtCycle = ((player.martialArtCycle || 0) + 1) % 2;
+                    
+                    const attackDir = new THREE.Vector3(-Math.sin(player.lookAngle), 0, -Math.cos(player.lookAngle));
+                    
+                    // Martial Arts Animations
+                    if (player.martialArtCycle === 0) {
+                        // Spinning Kick
+                        player.velocity.y = 0.15;
+                        const spinInterval = setInterval(() => {
+                            player.mesh.rotation.y += 0.8;
+                        }, 50);
+                        setTimeout(() => clearInterval(spinInterval), 300);
+                        
+                        // Kick effect
+                        for (let i = 0; i < 12; i++) {
+                            const angle = (i / 12) * Math.PI * 2;
+                            const p = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.1), new THREE.MeshBasicMaterial({ color: 0x00FFFF }));
+                            p.position.copy(player.position).addScaledVector(attackDir, 1.5);
+                            p.position.y += 0.5;
+                            scene.add(p);
+                            bloodParticles.push({ mesh: p, velocity: new THREE.Vector3(Math.cos(angle)*0.2, 0.1, Math.sin(angle)*0.2), lifetime: 15 });
+                        }
+                    } else {
+                        // Wing Chops
+                        const leftWing = player.mesh.getObjectByName('wingL');
+                        const rightWing = player.mesh.getObjectByName('wingR');
+                        if (leftWing && rightWing) {
+                            leftWing.rotation.z = Math.PI/2;
+                            rightWing.rotation.z = -Math.PI/2;
+                            setTimeout(() => {
+                                leftWing.rotation.z = 0;
+                                rightWing.rotation.z = 0;
+                            }, 200);
+                        }
+                        
+                        // Chop effect
+                        const chop = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.5), new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }));
+                        chop.position.copy(player.position).addScaledVector(attackDir, 2);
+                        chop.position.y += 1;
+                        chop.lookAt(player.position.clone().add(attackDir));
+                        scene.add(chop);
+                        bloodParticles.push({ mesh: chop, velocity: attackDir.clone().multiplyScalar(0.1), lifetime: 10 });
+                    }
+                    
+                    // Damage nearby enemies
+                    enemies.forEach((enemy, i) => {
+                        if (player.position.distanceTo(enemy.position) < 6) {
+                            enemy.health -= 40;
+                            if (enemy.health <= 0) handleEnemyDeath(enemy, i, 'martialArts');
+                            
+                            // Visual hit
+                            createBloodParticle(enemy.position.clone(), 'small');
+                        }
+                    });
+                }
+            }
+
             const abilityBar = document.getElementById('ability-bar');
             const abilityPrompt = document.getElementById('ability-prompt');
             
