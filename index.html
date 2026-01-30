@@ -4784,8 +4784,11 @@
                 baseSpeed = 0.08; // Double speed during charge!
             }
 
-            // Get speed modifier based on terrain
-            const speedModifier = getSpeedModifier(player.position);
+            // Get speed modifier based on terrain (only if on ground)
+            let speedModifier = 1.0;
+            if (player.position.y <= getTerrainHeight(player.position.x, player.position.z) + 1.2) {
+                speedModifier = getSpeedModifier(player.position);
+            }
             const moveSpeed = baseSpeed * speedModifier * playerStats.speed;
 
             // Store old position for collision rollback
